@@ -18,9 +18,11 @@ import { JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import { Caveat_400Regular } from '@expo-google-fonts/caveat';
 import { View, ActivityIndicator } from 'react-native';
 import { ThemeProvider } from '@/theme/ThemeProvider';
-import { RJ_LIGHT } from '@/theme/tokens';
+import { RJ_LIGHT, RJ_DARK } from '@/theme/tokens';
+import { usePreferences } from '@/theme/preferences';
 
 export default function RootLayout() {
+  const { prefs, loaded: prefsLoaded } = usePreferences();
   const [loaded] = useCormorant({
     CormorantGaramond_400Regular,
     CormorantGaramond_400Regular_Italic,
@@ -33,7 +35,7 @@ export default function RootLayout() {
     Caveat_400Regular,
   });
 
-  if (!loaded) {
+  if (!loaded || !prefsLoaded) {
     return (
       <View
         style={{
@@ -48,14 +50,16 @@ export default function RootLayout() {
     );
   }
 
+  const palette = prefs.dark ? RJ_DARK : RJ_LIGHT;
+
   return (
     <SafeAreaProvider>
-      <ThemeProvider dark={false} density="comfortable">
-        <StatusBar style="dark" />
+      <ThemeProvider dark={prefs.dark} density={prefs.density}>
+        <StatusBar style={prefs.dark ? 'light' : 'dark'} />
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: RJ_LIGHT.bg },
+            contentStyle: { backgroundColor: palette.bg },
             animation: 'fade',
           }}
         />
