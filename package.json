@@ -47,5 +47,9 @@
     "react-test-renderer": "18.2.0",
     "typescript": "~5.4.5"
   },
+  "jest": {
+    "preset": "react-native",
+    "setupFilesAfterEnv": ["@testing-library/jest-native/extend-expect"]
+  },
   "private": true
 }
