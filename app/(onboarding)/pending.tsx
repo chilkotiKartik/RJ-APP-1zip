@@ -8,7 +8,9 @@ import { MonoLabel } from '@/components/primitives/MonoLabel';
 import { OrnamentDivider } from '@/components/primitives/OrnamentDivider';
 import { PaperNoise } from '@/components/primitives/PaperNoise';
 import { WaxSeal } from '@/components/primitives/WaxSeal';
+import { TextLink } from '@/components/primitives/Button';
 import { useStatus } from '@/lib/hooks';
+import { supabase } from '@/lib/supabase';
 
 export default function Pending() {
   const { c, f, d } = useRJTheme();
@@ -28,6 +30,11 @@ export default function Pending() {
     }
   }, [phase, loading]);
 
+  const onSignOut = async () => {
+    try { await supabase.auth.signOut(); } catch { /* best-effort */ }
+    router.replace('/');
+  };
+
   return (
     <ScreenScroll>
       <PaperNoise />
@@ -44,6 +51,9 @@ export default function Pending() {
             Juliet reads slowly. We&rsquo;ll let you know the moment she&rsquo;s ready to meet.
           </Text>
         </Stack>
+        <View style={{ marginTop: 40, alignItems: 'center' }}>
+          <TextLink onPress={onSignOut} color={c.inkMuted}>Sign out</TextLink>
+        </View>
       </View>
     </ScreenScroll>
   );
