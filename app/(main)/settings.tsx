@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, Switch, Pressable } from 'react-native';
 import { router } from 'expo-router';
+import { safeBack } from '@/lib/nav';
 import * as Haptics from 'expo-haptics';
 import { useRJTheme } from '@/theme/useRJTheme';
 import { ScreenScroll, Row, Stack } from '@/components/primitives/layout';
@@ -132,7 +133,7 @@ export default function Settings() {
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       <PaperHeader
         left={
-          <IconBtn onPress={() => router.back()} testID="settings-back-btn">
+          <IconBtn onPress={() => safeBack('/(main)/home')} testID="settings-back-btn">
             <IconBack />
           </IconBtn>
         }

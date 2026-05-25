@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { safeBack } from '@/lib/nav';
 import { useRJTheme } from '@/theme/useRJTheme';
 import { ScreenScroll, Row, Stack } from '@/components/primitives/layout';
 import { MonoLabel } from '@/components/primitives/MonoLabel';
@@ -35,7 +36,7 @@ export default function Referral() {
       <PaperNoise />
       <View style={{ padding: d.pad, paddingTop: d.pad + insets.top, flex: 1 }}>
         <Row justify="space-between">
-          <TextLink onPress={() => router.back()}>← Back</TextLink>
+          <TextLink onPress={() => safeBack()}>← Back</TextLink>
           <MonoLabel>Step 1 of 4</MonoLabel>
         </Row>
 

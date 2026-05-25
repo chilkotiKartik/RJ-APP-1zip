@@ -29,9 +29,16 @@ jest.mock('@/lib/supabase', () => ({
   },
 }));
 
+const mockCanGoBack = jest.fn(() => true);
+
 jest.mock('expo-router', () => ({
   __esModule: true,
-  router: { replace: (...a: unknown[]) => (mockReplace as unknown as (...x: unknown[]) => unknown)(...a), back: (...a: unknown[]) => (mockBack as unknown as (...x: unknown[]) => unknown)(...a), push: jest.fn() },
+  router: {
+    replace: (...a: unknown[]) => (mockReplace as unknown as (...x: unknown[]) => unknown)(...a),
+    back: (...a: unknown[]) => (mockBack as unknown as (...x: unknown[]) => unknown)(...a),
+    push: jest.fn(),
+    canGoBack: (...a: unknown[]) => (mockCanGoBack as unknown as (...x: unknown[]) => unknown)(...a),
+  },
 }));
 
 jest.mock('expo-haptics', () => ({ __esModule: true, selectionAsync: jest.fn() }));
@@ -120,11 +127,21 @@ describe('Settings', () => {
     expect(mockSignOut).toHaveBeenCalled();
   });
 
-  it('back button calls router.back', () => {
+  it('back button calls router.back when stack has history', () => {
+    mockCanGoBack.mockReturnValue(true);
     mockUseStatus.mockReturnValue({ profile: baseProfile, userId: 'u1' });
     mockUsePreferences.mockReturnValue({ prefs: { dark: false, density: 'comfortable' }, loaded: true, update: jest.fn() });
     const { getByTestId } = wrap(<Settings />);
     fireEvent.press(getByTestId('settings-back-btn'));
     expect(mockBack).toHaveBeenCalled();
+  });
+
+  it('back button falls back to home when no history', () => {
+    mockCanGoBack.mockReturnValue(false);
+    mockUseStatus.mockReturnValue({ profile: baseProfile, userId: 'u1' });
+    mockUsePreferences.mockReturnValue({ prefs: { dark: false, density: 'comfortable' }, loaded: true, update: jest.fn() });
+    const { getByTestId } = wrap(<Settings />);
+    fireEvent.press(getByTestId('settings-back-btn'));
+    expect(mockReplace).toHaveBeenCalledWith('/(main)/home');
   });
 });

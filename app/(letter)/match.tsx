@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { safeBack } from '@/lib/nav';
 import { useRJTheme } from '@/theme/useRJTheme';
 import { Row, Stack } from '@/components/primitives/layout';
 import { MonoLabel } from '@/components/primitives/MonoLabel';
@@ -28,7 +29,7 @@ export default function Match() {
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
       <PaperNoise />
       <Row justify="space-between" style={{ paddingHorizontal: d.pad, paddingVertical: 12 }}>
-        <TextLink onPress={() => router.back()}>← Letter</TextLink>
+        <TextLink onPress={() => safeBack()}>← Letter</TextLink>
         <MonoLabel>{MATCH.name}</MonoLabel>
       </Row>
 

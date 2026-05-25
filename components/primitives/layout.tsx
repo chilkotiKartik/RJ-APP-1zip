@@ -1,6 +1,6 @@
 // RJ-APP/components/primitives/layout.tsx
 import { ReactNode } from 'react';
-import { View, ScrollView, StyleSheet, ViewStyle } from 'react-native';
+import { View, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, ViewStyle } from 'react-native';
 import { useRJTheme } from '@/theme/useRJTheme';
 
 export function Stack({
@@ -32,13 +32,20 @@ export function ScreenScroll({
 }: { children: ReactNode; style?: ViewStyle }) {
   const { c } = useRJTheme();
   return (
-    <ScrollView
-      style={[{ flex: 1, backgroundColor: c.bg }, style]}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: c.bg }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {children}
-    </ScrollView>
+      <ScrollView
+        style={[{ flex: 1, backgroundColor: c.bg }, style]}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+      >
+        {children}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

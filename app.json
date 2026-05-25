@@ -23,7 +23,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FBF2E3"
       },
-      "package": "com.romeojuliet.app"
+      "package": "com.romeojuliet.app",
+      "softwareKeyboardLayoutMode": "resize"
     },
     "plugins": [
       "expo-router",
