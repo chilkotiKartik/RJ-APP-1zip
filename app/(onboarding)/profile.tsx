@@ -11,6 +11,7 @@ import { PrimaryButton, TextLink } from '@/components/primitives/Button';
 import { PaperNoise } from '@/components/primitives/PaperNoise';
 import { supabase } from '@/lib/supabase';
 import { pickAndUploadPhoto } from '@/lib/upload';
+import { saveProfile } from '@/lib/api';
 
 export default function Profile() {
   const { c, f, d } = useRJTheme();
@@ -37,17 +38,17 @@ export default function Profile() {
     if (photoUrls.length < 3) return Alert.alert('Three photos are required.');
 
     setBusy(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setBusy(false); return Alert.alert('Session expired'); }
-    const { error } = await supabase.from('profiles').upsert({
-      user_id: user.id,
-      first_name: firstName.trim(),
-      social_handle: social.trim() || null,
-      photo_urls: photoUrls,
-      phase: 'PENDING_APPROVAL',
-    }, { onConflict: 'user_id' });
+    // Goes through the web /api/profile endpoint (not direct supabase) so
+    // the admin_members table gets synced — that's what the admin
+    // dashboard reads. A direct profiles upsert here would land in
+    // PENDING_APPROVAL but never appear in the admin queue.
+    const r = await saveProfile({
+      firstName: firstName.trim(),
+      socialHandle: social.trim() || null,
+      photoUrls,
+    });
     setBusy(false);
-    if (error) return Alert.alert("Couldn't save your profile", error.message);
+    if (!r.ok) return Alert.alert("Couldn't save your profile", r.error ?? 'Try again');
     router.replace('/(onboarding)/pending');
   };
 

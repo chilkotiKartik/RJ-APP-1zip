@@ -23,3 +23,24 @@ export async function redeemReferral(code: string): Promise<{ ok: boolean; error
   }
   return { ok: true };
 }
+
+export async function saveProfile(input: {
+  firstName: string;
+  socialHandle?: string | null;
+  photoUrls: string[];
+}): Promise<{ ok: boolean; error?: string }> {
+  const res = await authedFetch('/api/profile', {
+    method: 'POST',
+    body: JSON.stringify({
+      firstName: input.firstName,
+      socialHandle: input.socialHandle ?? null,
+      photoUrls: input.photoUrls,
+    }),
+  });
+  if (!res.ok) {
+    let error = 'Could not save profile';
+    try { error = (await res.json()).error ?? error; } catch { /* ignore parse errors */ }
+    return { ok: false, error };
+  }
+  return { ok: true };
+}
