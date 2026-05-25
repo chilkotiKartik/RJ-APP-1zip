@@ -43,7 +43,10 @@ export default function Index() {
       return <Redirect href="/(conversation)/voice" />;
     case 'QUESTIONNAIRE_DONE':
     case 'WAITING':
-      return <Redirect href="/(conversation)/waiting" />;
+      // Web /waiting hosts the questionnaire AND the post-questionnaire
+      // "Romeo is reading" wait state — both backed by the same phase.
+      // Mobile delegates the whole flow to the WebView so we don't drift.
+      return <Redirect href="/(conversation)/questionnaire" />;
     case 'LETTER_READY':
       return <Redirect href="/(letter)/envelope" />;
     case 'COMPLETE':
