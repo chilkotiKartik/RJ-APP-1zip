@@ -20,7 +20,11 @@ export default function Pending() {
     if (phase === 'APPROVED' || phase === 'CHATTING') {
       router.replace('/(conversation)/voice' as never);
     } else if (phase === 'REJECTED') {
-      router.replace('/(auth)/welcome');
+      router.replace('/(auth)/rejected');
+    } else if (phase === 'PROFILE' || phase === 'REFERRAL') {
+      // Phase went backwards (admin reset, manual revert) — bounce
+      // through root router so user lands on the right screen.
+      router.replace('/');
     }
   }, [phase, loading]);
 
