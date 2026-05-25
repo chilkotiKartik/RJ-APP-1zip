@@ -25,7 +25,9 @@ export default function SignIn() {
       if (r.error !== 'Cancelled') Alert.alert('Sign in didn\'t complete', r.error ?? 'Try again');
       return;
     }
-    router.replace('/(auth)/referral' as never);
+    // Bounce through the root router so returning users with completed
+    // profiles skip referral and land on the right screen for their phase.
+    router.replace('/' as never);
   };
 
   return (

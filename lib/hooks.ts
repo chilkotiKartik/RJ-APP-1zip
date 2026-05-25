@@ -68,3 +68,83 @@ export function useStatus(pollMs = 5000): StatusResult {
     refresh: fetch,
   };
 }
+
+export type MatchProfile = { first_name: string | null; archetype: string | null } | null;
+export type MatchRow = {
+  id: string;
+  user_a: string | null;
+  user_b: string | null;
+  status: string | null;
+  a_response: string | null;
+  b_response: string | null;
+  created_at: string | null;
+  profile_a: MatchProfile;
+  profile_b: MatchProfile;
+};
+
+export type MatchesResult = {
+  matches: MatchRow[];
+  loading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
+};
+
+export function useMatches(userId: string | null): MatchesResult {
+  const [matches, setMatches] = useState<MatchRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetch = async () => {
+    if (!userId) {
+      setMatches([]);
+      setLoading(false);
+      return;
+    }
+    try {
+      const { data, error: err } = await supabase
+        .from('matches')
+        .select(
+          '*, profile_a:profiles!user_a(first_name, archetype), profile_b:profiles!user_b(first_name, archetype)'
+        )
+        .or(`user_a.eq.${userId},user_b.eq.${userId}`)
+        .order('created_at', { ascending: false });
+      if (err) {
+        // Fallback for when the joined select isn't allowed by RLS / FK alias:
+        // re-query without the profile joins so the section still renders.
+        const fb = await supabase
+          .from('matches')
+          .select('*')
+          .or(`user_a.eq.${userId},user_b.eq.${userId}`)
+          .order('created_at', { ascending: false });
+        if (fb.error) {
+          setError(fb.error.message);
+          setMatches([]);
+        } else {
+          setMatches(((fb.data ?? []) as Omit<MatchRow, 'profile_a' | 'profile_b'>[]).map(m => ({
+            ...m, profile_a: null, profile_b: null,
+          })));
+          setError(null);
+        }
+      } else {
+        setMatches((data ?? []) as MatchRow[]);
+        setError(null);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'unknown');
+      setMatches([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetch();
+  }, [userId]);
+
+  return { matches, loading, error, refresh: fetch };
+}
+
+export function otherUserName(m: MatchRow, userId: string | null): string {
+  const otherProfile = m.user_a === userId ? m.profile_b : m.profile_a;
+  return otherProfile?.first_name ?? 'Someone';
+}
