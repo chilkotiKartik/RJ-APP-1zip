@@ -34,6 +34,8 @@ export default function Index() {
   }
 
   switch (phase) {
+    case 'PROFILE':
+      return <Redirect href="/(onboarding)/profile" />;
     case 'PENDING_APPROVAL':
       return <Redirect href="/(onboarding)/pending" />;
     case 'APPROVED':

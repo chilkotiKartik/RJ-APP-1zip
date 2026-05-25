@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
 
+// Source of truth: profiles_phase_check constraint in
+// Romeo-juliet/supabase/schema.sql. The web's /api/referral writes 'PROFILE'
+// after a successful referral code redemption — that's the post-signup,
+// pre-questionnaire state.
 export type Phase =
   | 'REFERRAL'
+  | 'PROFILE'
   | 'PENDING_APPROVAL'
   | 'APPROVED'
   | 'CHATTING'
