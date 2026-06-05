@@ -1,5 +1,6 @@
 // RJ-APP/app/(auth)/welcome.tsx
-import { View, Text, StyleSheet } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import Svg, { Rect, Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -18,6 +19,21 @@ export default function Welcome() {
   const { c, f, d } = useRJTheme();
   const insets = useSafeAreaInsets();
 
+  // Entrance animations
+  const envFade = useRef(new Animated.Value(0)).current;
+  const envSlide = useRef(new Animated.Value(24)).current;
+  const textFade = useRef(new Animated.Value(0)).current;
+  const btnFade = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(envFade, { toValue: 1, duration: 600, useNativeDriver: true, easing: Easing.out(Easing.cubic) }),
+      Animated.timing(envSlide, { toValue: 0, duration: 600, useNativeDriver: true, easing: Easing.out(Easing.cubic) }),
+      Animated.timing(textFade, { toValue: 1, duration: 500, delay: 300, useNativeDriver: true }),
+      Animated.timing(btnFade, { toValue: 1, duration: 450, delay: 500, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
   return (
     <ScreenScroll style={{ backgroundColor: c.bgAlt }}>
       <PaperNoise />
@@ -31,44 +47,50 @@ export default function Welcome() {
           <PostmarkStamp size={44} rotate={-9} />
         </Row>
 
-        <View style={styles.hero}>
-          {/* Envelope drawn as a single SVG so clip-path triangles render correctly on RN */}
+        <Animated.View style={[styles.hero, { opacity: envFade, transform: [{ translateY: envSlide }] }]}>
+          {/* Envelope */}
           <View style={styles.envelope}>
             <Svg width={ENV_W} height={ENV_H} viewBox={`0 0 ${ENV_W} ${ENV_H}`} style={StyleSheet.absoluteFill}>
               <Rect x={0} y={0} width={ENV_W} height={ENV_H} fill={c.bg} stroke={c.rule} strokeWidth={1} />
-              {/* bottom V — the back of the envelope folded up (filled below the flap line) */}
               <Path d={`M0 76 L${ENV_W / 2} ${ENV_H} L${ENV_W} 76 L${ENV_W} ${ENV_H} L0 ${ENV_H} Z`} fill={c.bgSunken} />
-              {/* top flap — the front, downward-pointing triangle */}
               <Path d={`M0 0 L${ENV_W} 0 L${ENV_W / 2} 167 Z`} fill={c.bgAlt} />
             </Svg>
             <View style={styles.seal}>
               <WaxSeal size={64} pulse />
             </View>
             <Text style={[styles.handwritten, { fontFamily: f.script, color: c.indigo }]}>
-              For you,{'\n'}whenever you’re ready.
+              For you,{'\n'}whenever you're ready.
             </Text>
           </View>
+        </Animated.View>
 
+        <Animated.View style={{ opacity: textFade, alignItems: 'center' }}>
           <Text style={[styles.subhead, { fontFamily: f.bodyI, color: c.ink }]}>
-            A private introduction service. One letter at a time. By referral only.
+            A private introduction service.{'\n'}One letter at a time. By referral only.
           </Text>
-        </View>
+        </Animated.View>
 
-        <Stack gap={10}>
-          <PrimaryButton onPress={() => router.push('/(auth)/referral' as never)}>Open the room</PrimaryButton>
-          <SecondaryButton onPress={() => router.push('/(auth)/signin' as never)}>Sign in</SecondaryButton>
-        </Stack>
+        <Animated.View style={{ opacity: btnFade }}>
+          <Stack gap={10}>
+            <PrimaryButton onPress={() => router.push('/(auth)/referral' as never)}>
+              Open the room
+            </PrimaryButton>
+            <SecondaryButton onPress={() => router.push('/(auth)/signin' as never)}>
+              Sign in
+            </SecondaryButton>
+          </Stack>
+        </Animated.View>
       </View>
     </ScreenScroll>
   );
 }
 
 const styles = StyleSheet.create({
-  frame: { flex: 1, minHeight: 720 },
+  frame: { flex: 1, minHeight: 720, gap: 28 },
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24 },
   envelope: {
     width: ENV_W, height: ENV_H, position: 'relative',
-    shadowColor: '#000', shadowOpacity: 0.4, shadowOffset: { width: 0, height: 24 }, shadowRadius: 48,
+    shadowColor: '#000', shadowOpacity: 0.35, shadowOffset: { width: 0, height: 20 }, shadowRadius: 44,
     elevation: 8,
   },
   seal: {
@@ -79,5 +101,5 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 20, left: 22,
     fontSize: 22, transform: [{ rotate: '-2deg' }],
   },
-  subhead: { fontSize: 22, lineHeight: 31, textAlign: 'center', maxWidth: 260 },
+  subhead: { fontSize: 20, lineHeight: 30, textAlign: 'center', maxWidth: 280 },
 });
