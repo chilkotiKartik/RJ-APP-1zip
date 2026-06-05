@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '@/lib/storage';
 import type { DensityKey } from './tokens';
 
 const KEY_DARK = 'rj.theme.dark';
@@ -15,8 +15,8 @@ export function usePreferences() {
   useEffect(() => {
     (async () => {
       const [d, den] = await Promise.all([
-        SecureStore.getItemAsync(KEY_DARK),
-        SecureStore.getItemAsync(KEY_DENSITY),
+        storage.getItem(KEY_DARK),
+        storage.getItem(KEY_DENSITY),
       ]);
       setPrefs({
         dark: d === '1',
@@ -28,8 +28,8 @@ export function usePreferences() {
 
   const update = async (next: Partial<Preferences>) => {
     setPrefs(p => ({ ...p, ...next }));
-    if (next.dark !== undefined) await SecureStore.setItemAsync(KEY_DARK, next.dark ? '1' : '0');
-    if (next.density !== undefined) await SecureStore.setItemAsync(KEY_DENSITY, next.density);
+    if (next.dark !== undefined) await storage.setItem(KEY_DARK, next.dark ? '1' : '0');
+    if (next.density !== undefined) await storage.setItem(KEY_DENSITY, next.density);
   };
 
   return { prefs, loaded, update };
