@@ -11,7 +11,7 @@ import { useRJTheme } from '@/theme/useRJTheme';
 import { ScreenScroll, Row, Stack } from '@/components/primitives/layout';
 import { MonoLabel } from '@/components/primitives/MonoLabel';
 import { OrnamentDivider } from '@/components/primitives/OrnamentDivider';
-import { PrimaryButton, SecondaryButton, TextLink } from '@/components/primitives/Button';
+import { PrimaryButton, TextLink } from '@/components/primitives/Button';
 import { PaperNoise } from '@/components/primitives/PaperNoise';
 import { supabase } from '@/lib/supabase';
 import { useStatus, useMatches } from '@/lib/hooks';

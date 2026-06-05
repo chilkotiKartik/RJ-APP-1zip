@@ -40,7 +40,8 @@ export default function Match() {
 
   // Get the other user's full profile from Supabase
   useEffect(() => {
-    if (!mostRecent || matchLoading) return;
+    if (matchLoading) return;
+    if (!mostRecent) { setProfileLoading(false); return; }
     const otherId = mostRecent.user_a === userId ? mostRecent.user_b : mostRecent.user_a;
     if (!otherId) { setProfileLoading(false); return; }
 
