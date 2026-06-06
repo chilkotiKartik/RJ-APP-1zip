@@ -17,6 +17,8 @@
     "@expo-google-fonts/eb-garamond": "^0.4.2",
     "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "@expo/metro-runtime": "^5.0.5",
+    "@livekit/react-native": "2.9.8",
+    "@livekit/react-native-webrtc": "137.0.3",
     "@react-native-community/netinfo": "^11.4.1",
     "@supabase/supabase-js": "^2.45.0",
     "@tanstack/react-query": "^5.51.0",
@@ -80,7 +82,8 @@
     ]
   },
   "overrides": {
-    "@livekit/react-native": "2.9.8"
+    "@livekit/react-native": "2.9.8",
+    "@livekit/react-native-webrtc": "137.0.3"
   },
   "private": true
 }

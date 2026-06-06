@@ -2,3 +2,4 @@
 - [Expo web animation](expo-web-animation.md) — use Animated.parallel with delays, NOT Animated.sequence; sequence can stall on web preview due to native driver fallback.
 - [expo-notifications web stub](expo-notifications-web.md) — expo-notifications lacks web stubs for some modules; create lib/push.web.ts as a no-op stub; Metro picks .web.ts automatically on web.
 - [npm legacy peer deps](npm-peer-deps.md) — all installs require --legacy-peer-deps due to @livekit/react-native-webrtc conflict with @elevenlabs/react-native.
+- [EAS build livekit peer dep fix](eas-livekit-fix.md) — pin @livekit/react-native and @livekit/react-native-webrtc as explicit direct deps to eliminate peer dep conflict from package-lock.json entirely.
