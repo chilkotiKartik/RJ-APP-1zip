@@ -1,3 +1,4 @@
+// RJ-APP/app/(conversation)/archetype.tsx
 import { useEffect, useState } from 'react';
 import { View, StyleSheet, Pressable, Text, Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +9,7 @@ import { ArchetypeCard, ArchetypeReading } from '@/components/archetype/Archetyp
 import { TextLink, PrimaryButton } from '@/components/primitives/Button';
 import { MonoLabel } from '@/components/primitives/MonoLabel';
 import { PaperNoise } from '@/components/primitives/PaperNoise';
+import { RosePetals } from '@/components/effects/RosePetals';
 import { supabase } from '@/lib/supabase';
 import { Row } from '@/components/primitives/layout';
 
@@ -74,8 +76,8 @@ export default function ArchetypeScreen() {
   const { c, f, d } = useRJTheme();
   const insets = useSafeAreaInsets();
   const [archetypeId, setArchetypeId] = useState<Archetype['id']>('curious');
+  const [petalsRunning, setPetalsRunning] = useState(false);
 
-  // Load whatever Juliet assigned. If none yet, show 'curious' as the demo default.
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -84,6 +86,9 @@ export default function ArchetypeScreen() {
       const arch = (data as { archetype?: string } | null)?.archetype;
       if (arch && (arch in ARCHETYPES)) setArchetypeId(arch as Archetype['id']);
     })();
+    // Trigger rose petals on reveal
+    const t = setTimeout(() => setPetalsRunning(true), 600);
+    return () => clearTimeout(t);
   }, []);
 
   const archetype = ARCHETYPES[archetypeId];
@@ -96,6 +101,7 @@ export default function ArchetypeScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
       <PaperNoise />
+      <RosePetals running={petalsRunning} />
       <Row justify="space-between" style={{ paddingHorizontal: d.pad, paddingVertical: 12 }}>
         <TextLink onPress={() => router.replace('/(conversation)/waiting' as never)}>Skip</TextLink>
         <MonoLabel>Her reading</MonoLabel>
@@ -108,6 +114,12 @@ export default function ArchetypeScreen() {
           <Pressable onPress={onShare} style={[styles.shareBtn, { borderColor: c.forest }]}>
             <Text style={{ fontFamily: f.mono, color: c.forest, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase' }}>Share</Text>
           </Pressable>
+          <Pressable
+            onPress={() => router.push('/(conversation)/compatibility' as never)}
+            style={[styles.shareBtn, { borderColor: c.gold }]}
+          >
+            <Text style={{ fontFamily: f.mono, color: c.gold, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase' }}>Matches</Text>
+          </Pressable>
           <View style={{ flex: 1 }}>
             <PrimaryButton onPress={() => router.replace('/(conversation)/waiting' as never)}>Continue</PrimaryButton>
           </View>
@@ -118,5 +130,5 @@ export default function ArchetypeScreen() {
 }
 
 const styles = StyleSheet.create({
-  shareBtn: { borderWidth: 1, paddingHorizontal: 18, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
+  shareBtn: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
 });

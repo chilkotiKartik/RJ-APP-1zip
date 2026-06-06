@@ -2,7 +2,9 @@
 import { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Defs, RadialGradient, Stop, Path, Circle } from 'react-native-svg';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing,
+} from 'react-native-reanimated';
 import { useRJTheme } from '@/theme/useRJTheme';
 
 const SEAL_PATH =
@@ -15,8 +17,16 @@ export function WaxSeal({ size = 64, pulse = false }: { size?: number; pulse?: b
 
   useEffect(() => {
     if (pulse) {
-      scale.value = withRepeat(withTiming(1.04, { duration: 1200, easing: Easing.inOut(Easing.ease) }), -1, true);
-      opacity.value = withRepeat(withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }), -1, true);
+      scale.value = withRepeat(
+        withTiming(1.04, { duration: 1200, easing: Easing.inOut(Easing.cubic) }),
+        -1,
+        true,
+      );
+      opacity.value = withRepeat(
+        withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.cubic) }),
+        -1,
+        true,
+      );
     } else {
       scale.value = 1;
       opacity.value = 1;
@@ -29,7 +39,15 @@ export function WaxSeal({ size = 64, pulse = false }: { size?: number; pulse?: b
   }));
 
   return (
-    <Animated.View style={[{ width: size, height: size }, animStyle]}>
+    <Animated.View style={[{ width: size, height: size }, animStyle,
+      {
+        shadowColor: c.waxDeep,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 4,
+      }
+    ]}>
       <Svg width={size} height={size} viewBox="0 0 100 100">
         <Defs>
           <RadialGradient id="waxGrad" cx="32%" cy="28%" r="80%">
@@ -39,6 +57,8 @@ export function WaxSeal({ size = 64, pulse = false }: { size?: number; pulse?: b
         </Defs>
         <Path d={SEAL_PATH} fill="url(#waxGrad)" />
         <Circle cx="50" cy="50" r="34" fill="none" stroke={c.goldLight} strokeOpacity={0.3} strokeWidth={1} />
+        {/* Radial highlight — top-left embossing */}
+        <Circle cx="30" cy="26" r="12" fill="white" fillOpacity={0.13} />
       </Svg>
       <View style={styles.monogram} pointerEvents="none">
         <Text style={{

@@ -1,10 +1,11 @@
 // RJ-APP/app/(letter)/letter.tsx
-// Romeo's letter — fetches the actual match data from Supabase to personalise.
+// Romeo's letter — Caveat handwriting font, page curl, ink blot decorations.
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { safeBack } from '@/lib/nav';
+import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import { useRJTheme } from '@/theme/useRJTheme';
 import { Row, Stack } from '@/components/primitives/layout';
 import { MonoLabel } from '@/components/primitives/MonoLabel';
@@ -22,16 +23,34 @@ function letterNumber(match: MatchRow | undefined): string {
   return String(sum % 9999).padStart(4, '0');
 }
 
-function buildLetter(name: string, archetypeId: string | null, myName: string | null): string {
+function buildLetter(name: string, archetypeId: string | null): string {
   const arch = archetypeId && (archetypeId in ARCHETYPES)
     ? ARCHETYPES[archetypeId as ArchetypeId]
     : null;
-
-  const archLine = arch
+  return arch
     ? `I think you might like ${name}. He is ${arch.name} — ${arch.sub}.`
     : `I think you might like ${name}. He struck me as someone worth knowing.`;
+}
 
-  return archLine;
+function InkBlots({ color }: { color: string }) {
+  return (
+    <Svg width={80} height={24} viewBox="0 0 80 24" style={{ marginTop: 8, marginLeft: 'auto' }}>
+      <SvgCircle cx={8} cy={12} r={4} fill={color} fillOpacity={0.12} />
+      <SvgCircle cx={22} cy={8} r={2.5} fill={color} fillOpacity={0.08} />
+      <SvgCircle cx={34} cy={16} r={5} fill={color} fillOpacity={0.1} />
+      <SvgCircle cx={48} cy={10} r={2} fill={color} fillOpacity={0.07} />
+      <SvgCircle cx={58} cy={14} r={3.5} fill={color} fillOpacity={0.09} />
+      <SvgCircle cx={70} cy={8} r={2} fill={color} fillOpacity={0.06} />
+    </Svg>
+  );
+}
+
+function PageCurl({ color }: { color: string }) {
+  return (
+    <View style={[styles.curlCorner, { borderColor: color }]}>
+      <View style={[styles.curlShadow, { backgroundColor: color }]} />
+    </View>
+  );
 }
 
 export default function Letter() {
@@ -47,7 +66,7 @@ export default function Letter() {
     : null;
   const archetypeId = otherProfile?.archetype ?? null;
 
-  const letterBody = buildLetter(otherName, archetypeId, profile?.first_name ?? null);
+  const letterBody = buildLetter(otherName, archetypeId);
   const num = letterNumber(mostRecent);
   const myName = profile?.first_name ?? 'friend';
 
@@ -55,7 +74,6 @@ export default function Letter() {
     <View style={{ flex: 1, backgroundColor: c.bgAlt, paddingTop: insets.top }}>
       <PaperNoise />
 
-      {/* Header bar */}
       <Row justify="space-between" style={{ paddingHorizontal: d.pad, paddingVertical: 12 }}>
         <TextLink onPress={() => safeBack()}>← Envelope</TextLink>
         <MonoLabel>Letter no. {num}</MonoLabel>
@@ -71,28 +89,27 @@ export default function Letter() {
           </View>
         ) : (
           <>
-            {/* Paper letter */}
             <View style={[styles.paper, { backgroundColor: c.bg, borderColor: c.rule }]}>
               {/* Wax seal at top */}
               <View style={{ alignItems: 'center', marginBottom: 22 }}>
                 <WaxSeal size={52} />
               </View>
 
-              {/* Greeting */}
-              <Text style={{ fontFamily: f.script, fontSize: 28, color: c.indigo, marginBottom: 20 }}>
+              {/* Greeting — CormorantGaramond italic */}
+              <Text style={{ fontFamily: f.serifI, fontSize: 24, color: c.indigo, marginBottom: 20 }}>
                 Dear {myName},
               </Text>
 
-              {/* Body */}
-              <Text style={{ fontFamily: f.serif, fontSize: 19, color: c.ink, lineHeight: 31 }}>
+              {/* Body — Caveat handwriting */}
+              <Text style={{ fontFamily: f.script, fontSize: 18, color: c.ink, lineHeight: 28 }}>
                 I have just finished reading your letter to Juliet — twice, actually, because the second time I wanted to be sure I hadn&rsquo;t imagined the part about you.
               </Text>
 
-              <Text style={{ fontFamily: f.serif, fontSize: 19, color: c.ink, lineHeight: 31, marginTop: 18 }}>
+              <Text style={{ fontFamily: f.script, fontSize: 18, color: c.ink, lineHeight: 28, marginTop: 18 }}>
                 {letterBody}
               </Text>
 
-              <Text style={{ fontFamily: f.serif, fontSize: 19, color: c.ink, lineHeight: 31, marginTop: 18 }}>
+              <Text style={{ fontFamily: f.script, fontSize: 18, color: c.ink, lineHeight: 28, marginTop: 18 }}>
                 Take a moment with his note. There is no clock running.
               </Text>
 
@@ -101,12 +118,17 @@ export default function Letter() {
               </View>
 
               {/* Sign-off */}
-              <Text style={{ fontFamily: f.script, fontSize: 24, color: c.indigo, textAlign: 'right', marginTop: 18, lineHeight: 32 }}>
+              <Text style={{ fontFamily: f.script, fontSize: 22, color: c.indigo, textAlign: 'right', marginTop: 18, lineHeight: 30 }}>
                 Yours,{'\n'}Romeo.
               </Text>
+
+              {/* Ink blot decorations near signature */}
+              <InkBlots color={c.ink} />
+
+              {/* Page curl bottom-right */}
+              <PageCurl color={c.rule} />
             </View>
 
-            {/* CTAs */}
             <Stack gap={10} style={{ marginTop: 28 }}>
               <PrimaryButton onPress={() => router.push('/(letter)/match' as never)}>
                 Meet {otherName}
@@ -116,7 +138,6 @@ export default function Letter() {
               </SecondaryButton>
             </Stack>
 
-            {/* Date postmark */}
             <View style={{ alignItems: 'center', marginTop: 20 }}>
               <Text style={{ fontFamily: f.mono, fontSize: 8, letterSpacing: 1.8, color: c.inkMuted, textTransform: 'uppercase' }}>
                 Delivered · Romeo &amp; Juliet Correspondence
@@ -133,10 +154,31 @@ const styles = StyleSheet.create({
   paper: {
     borderWidth: 1,
     padding: 28,
+    paddingBottom: 36,
     shadowColor: '#000',
     shadowOpacity: 0.14,
     shadowOffset: { width: 0, height: 12 },
     shadowRadius: 28,
     elevation: 4,
+    overflow: 'hidden',
+  },
+  curlCorner: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderTopLeftRadius: 28,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+  },
+  curlShadow: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 14,
+    height: 14,
+    opacity: 0.06,
+    borderTopLeftRadius: 14,
   },
 });

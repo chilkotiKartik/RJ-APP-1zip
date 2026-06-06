@@ -1,3 +1,4 @@
+// RJ-APP/components/letter/EnvelopeOpening.tsx
 import { useEffect } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import Svg, { Rect, Path } from 'react-native-svg';
@@ -22,6 +23,7 @@ export function EnvelopeOpening({ onComplete }: { onComplete?: () => void }) {
   const flapRot = useSharedValue(0);
   const letterY = useSharedValue(20);
   const letterOpacity = useSharedValue(0);
+  const flashOpacity = useSharedValue(0);
   const started = useSharedValue(0);
 
   const tap = () => {
@@ -29,7 +31,7 @@ export function EnvelopeOpening({ onComplete }: { onComplete?: () => void }) {
     started.value = 1;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    // Phase 1 — wax cracks (800ms)
+    // Phase 1 — wax cracks (800ms) + screen flash
     sealRot.value = withSequence(
       withTiming(-3, { duration: 200 }),
       withTiming(2,  { duration: 250 }),
@@ -44,18 +46,24 @@ export function EnvelopeOpening({ onComplete }: { onComplete?: () => void }) {
     sealY.value = withTiming(28,  { duration: 800 });
     sealOpacity.value = withTiming(0, { duration: 800 });
 
+    // Flash on crack (at 450ms in)
+    flashOpacity.value = withDelay(450, withSequence(
+      withTiming(0.55, { duration: 40 }),
+      withTiming(0, { duration: 80 }),
+    ));
+
     // Phase 2 — flap unfolds (700ms after 800ms)
     flapRot.value = withDelay(800, withTiming(180, { duration: 700, easing: Easing.inOut(Easing.cubic) }));
 
-    // Phase 3 — letter rises (900ms after 1500ms)
-    letterY.value = withDelay(1500, withTiming(-180, { duration: 900, easing: Easing.out(Easing.cubic) }));
-    letterOpacity.value = withDelay(1500, withTiming(1, { duration: 600 }, () => {
+    // Phase 3 — letter rises (1200ms after 1500ms) — slower for more drama
+    letterY.value = withDelay(1500, withTiming(-180, { duration: 1200, easing: Easing.out(Easing.cubic) }));
+    letterOpacity.value = withDelay(1500, withTiming(1, { duration: 700 }, () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       if (onComplete) runOnJS(onComplete)();
     }));
   };
 
   useEffect(() => {
-    // auto-start once mounted
     const id = setTimeout(tap, 600);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -77,6 +85,9 @@ export function EnvelopeOpening({ onComplete }: { onComplete?: () => void }) {
     transform: [{ translateY: letterY.value }],
     opacity: letterOpacity.value,
   }));
+  const flashStyle = useAnimatedStyle(() => ({
+    opacity: flashOpacity.value,
+  }));
 
   return (
     <Pressable onPress={tap}>
@@ -95,7 +106,7 @@ export function EnvelopeOpening({ onComplete }: { onComplete?: () => void }) {
             <Rect x={0} y={0} width={W} height={H} fill={c.bg} stroke={c.rule} strokeWidth={1} />
             <Path d={`M0 80 L${W/2} ${H} L${W} 80 L${W} ${H} L0 ${H} Z`} fill={c.bgSunken} />
           </Svg>
-          {/* Flap (hinges at top, falls down) */}
+          {/* Flap */}
           <Animated.View style={[{ position: 'absolute', top: 0, left: 0, width: W, height: H * 0.85, transformOrigin: 'top center' }, flapStyle]}>
             <Svg width={W} height={H * 0.85} viewBox={`0 0 ${W} ${H * 0.85}`}>
               <Path d={`M0 0 L${W} 0 L${W/2} ${H * 0.85} Z`} fill={c.bgAlt} stroke={c.rule} strokeWidth={1} />
@@ -106,6 +117,12 @@ export function EnvelopeOpening({ onComplete }: { onComplete?: () => void }) {
             <WaxSeal size={SEAL} />
           </Animated.View>
         </View>
+
+        {/* Flash overlay */}
+        <Animated.View
+          style={[StyleSheet.absoluteFill, { backgroundColor: 'white', borderRadius: 4 }, flashStyle]}
+          pointerEvents="none"
+        />
       </View>
     </Pressable>
   );

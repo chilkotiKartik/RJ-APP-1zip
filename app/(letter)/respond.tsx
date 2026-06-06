@@ -1,20 +1,26 @@
 // RJ-APP/app/(letter)/respond.tsx
-import { useState } from 'react';
+// Full-screen paper composer with stamp-style Yes/No and wax seal send animation.
+import { useState, useRef } from 'react';
 import {
-  View, Text, TextInput, StyleSheet, Alert, Pressable,
+  View, Text, TextInput, StyleSheet, Alert, Pressable, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { safeBack } from '@/lib/nav';
 import * as Haptics from 'expo-haptics';
+import Animated, {
+  useSharedValue, useAnimatedStyle, withSequence, withTiming, Easing,
+} from 'react-native-reanimated';
 import { useRJTheme } from '@/theme/useRJTheme';
-import { ScreenScroll, Row, Stack } from '@/components/primitives/layout';
+import { Row, Stack } from '@/components/primitives/layout';
 import { MonoLabel } from '@/components/primitives/MonoLabel';
 import { OrnamentDivider } from '@/components/primitives/OrnamentDivider';
-import { PrimaryButton, TextLink } from '@/components/primitives/Button';
 import { PaperNoise } from '@/components/primitives/PaperNoise';
-import { supabase } from '@/lib/supabase';
-import { useStatus, useMatches } from '@/lib/hooks';
+import { WaxSeal } from '@/components/primitives/WaxSeal';
+import { useStatus, useMatches, otherUserName } from '@/lib/hooks';
+import { respondToMatch } from '@/lib/api';
+
+const MAX_NOTE = 500;
 
 export default function Respond() {
   const { c, f, d } = useRJTheme();
@@ -25,6 +31,12 @@ export default function Respond() {
   const [choice, setChoice] = useState<'yes' | 'no' | null>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+
+  const sealScale = useSharedValue(1);
+  const sealAnim = useAnimatedStyle(() => ({ transform: [{ scale: sealScale.value }] }));
+
+  const match = matches[0];
+  const matchName = match ? otherUserName(match, userId) : 'Romeo';
 
   const selectChoice = (c_: 'yes' | 'no') => {
     Haptics.selectionAsync();
@@ -37,164 +49,196 @@ export default function Respond() {
       Alert.alert('Your answer', 'Please choose yes or no first.');
       return;
     }
+
+    // Wax seal press animation
+    sealScale.value = withSequence(
+      withTiming(0.95, { duration: 100, easing: Easing.out(Easing.ease) }),
+      withTiming(1.05, { duration: 150, easing: Easing.out(Easing.back(2)) }),
+      withTiming(1.0, { duration: 150 }),
+    );
+
     setBusy(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const match = matches[0];
-        if (match) {
-          const column = match.user_a === user.id ? 'a_response' : 'b_response';
-          await supabase
-            .from('matches')
-            .update({ [column]: JSON.stringify({ choice, note, ts: new Date().toISOString() }) })
-            .eq('id', match.id);
-        }
-        // Also store on profile as fallback
-        await supabase.from('profiles').update({
-          questionnaire_answers: {
-            last_response: { choice, note, ts: new Date().toISOString() },
-          },
-        }).eq('user_id', user.id);
+      if (match) {
+        await respondToMatch(match.id, choice, note.trim() || undefined);
       }
     } catch (e) {
       console.warn('Response save error:', e);
     } finally {
       setBusy(false);
-      router.replace('/(letter)/sent' as never);
+      setTimeout(() => router.replace('/(letter)/sent' as never), 400);
     }
   };
 
   return (
-    <ScreenScroll>
+    <View style={{ flex: 1, backgroundColor: c.bg }}>
       <PaperNoise />
-      <View style={{
-        padding: d.pad,
-        paddingTop: d.pad + insets.top,
-        paddingBottom: d.pad + insets.bottom,
-        flex: 1,
-      }}>
+      <ScrollView
+        contentContainerStyle={{
+          padding: d.pad,
+          paddingTop: d.pad + insets.top,
+          paddingBottom: d.pad + insets.bottom + 80,
+        }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
-        <Row justify="space-between">
-          <TextLink onPress={() => safeBack()}>← Back</TextLink>
+        <Row justify="space-between" style={{ marginBottom: 28 }}>
+          <Pressable onPress={() => safeBack()}>
+            <MonoLabel>← Back</MonoLabel>
+          </Pressable>
           <MonoLabel>Your reply</MonoLabel>
         </Row>
 
         {/* Title */}
-        <Stack gap={10} style={{ marginTop: 28 }}>
+        <Stack gap={6}>
           <MonoLabel color={c.gold}>Romeo is waiting</MonoLabel>
-          <Text style={{ fontFamily: f.serif, fontSize: d.hero, color: c.ink, lineHeight: d.hero * 1.05 }}>
-            What shall I{'\n'}tell him?
+          <Text style={{ fontFamily: f.serifI, fontSize: 28, color: c.ink, lineHeight: 34, maxWidth: 280 }}>
+            Your reply to {matchName}
           </Text>
-          <Text style={{ fontFamily: f.bodyI, fontSize: 16, color: c.inkMuted, lineHeight: 24 }}>
+          <Text style={{ fontFamily: f.bodyI, fontSize: 15, color: c.inkMuted, lineHeight: 22 }}>
             One word will do. A note is welcome if you have one.
           </Text>
         </Stack>
 
-        <View style={{ marginTop: 22, marginBottom: 18 }}>
+        <View style={{ marginVertical: 22 }}>
           <OrnamentDivider />
         </View>
 
-        {/* Yes / No choice */}
-        <Row gap={12}>
+        {/* Stamp-style Yes / No */}
+        <Row gap={12} style={{ marginBottom: 28 }}>
           <Pressable
             onPress={() => selectChoice('yes')}
-            style={[
-              styles.choiceCard,
-              {
-                borderColor: choice === 'yes' ? c.forest : c.rule,
-                backgroundColor: choice === 'yes' ? `${c.forest}12` : c.bgCard,
-                flex: 1,
-              },
-            ]}
+            style={[styles.stamp, {
+              borderColor: choice === 'yes' ? c.forest : c.rule,
+              backgroundColor: choice === 'yes' ? `${c.forest}10` : c.bgCard,
+              flex: 1,
+            }]}
           >
-            <Text style={[styles.choiceEmoji]}>✦</Text>
-            <Text style={[styles.choiceLabel, { fontFamily: f.serif, color: choice === 'yes' ? c.forest : c.ink }]}>
-              Yes
-            </Text>
-            {choice === 'yes' && (
-              <Text style={{ fontFamily: f.bodyI, fontSize: 12, color: c.forest, marginTop: 4, textAlign: 'center' }}>
-                I&rsquo;d like to meet
+            <View style={[styles.stampInner, { borderColor: choice === 'yes' ? c.forest : c.ruleSoft }]}>
+              <Text style={{ fontFamily: f.mono, fontSize: 9, color: choice === 'yes' ? c.forest : c.inkMuted, letterSpacing: 2, textTransform: 'uppercase' }}>
+                Approved
               </Text>
-            )}
+              <Text style={{ fontFamily: f.serifI, fontSize: 26, color: choice === 'yes' ? c.forest : c.ink, marginTop: 4 }}>
+                Yes
+              </Text>
+            </View>
           </Pressable>
 
           <Pressable
             onPress={() => selectChoice('no')}
-            style={[
-              styles.choiceCard,
-              {
-                borderColor: choice === 'no' ? c.wax : c.rule,
-                backgroundColor: choice === 'no' ? `${c.wax}10` : c.bgCard,
-                flex: 1,
-              },
-            ]}
+            style={[styles.stamp, {
+              borderColor: choice === 'no' ? c.wax : c.rule,
+              backgroundColor: choice === 'no' ? `${c.wax}10` : c.bgCard,
+              flex: 1,
+            }]}
           >
-            <Text style={[styles.choiceEmoji]}>◇</Text>
-            <Text style={[styles.choiceLabel, { fontFamily: f.serif, color: choice === 'no' ? c.wax : c.ink }]}>
-              Not this time
-            </Text>
-            {choice === 'no' && (
-              <Text style={{ fontFamily: f.bodyI, fontSize: 12, color: c.wax, marginTop: 4, textAlign: 'center' }}>
-                Perhaps someone else
+            <View style={[styles.stampInner, { borderColor: choice === 'no' ? c.wax : c.ruleSoft }]}>
+              <Text style={{ fontFamily: f.mono, fontSize: 9, color: choice === 'no' ? c.wax : c.inkMuted, letterSpacing: 2, textTransform: 'uppercase' }}>
+                Declined
               </Text>
-            )}
+              <Text style={{ fontFamily: f.serifI, fontSize: 26, color: choice === 'no' ? c.wax : c.ink, marginTop: 4 }}>
+                Not this time
+              </Text>
+            </View>
           </Pressable>
         </Row>
 
-        {/* Optional note */}
-        <View style={{ marginTop: 24 }}>
-          <Row gap={6} style={{ marginBottom: 8 }}>
-            <MonoLabel>A note to Romeo</MonoLabel>
-            <MonoLabel color={c.inkMuted}>· optional</MonoLabel>
+        {/* Full-screen paper note input */}
+        <View style={{ marginBottom: 8 }}>
+          <Row justify="space-between" style={{ marginBottom: 8 }}>
+            <MonoLabel>A note to Romeo · optional</MonoLabel>
           </Row>
           <TextInput
             value={note}
-            onChangeText={setNote}
-            placeholder="One sentence, perhaps."
+            onChangeText={t => setNote(t.slice(0, MAX_NOTE))}
+            placeholder="Write freely..."
             placeholderTextColor={c.inkMuted as string}
             multiline
             style={[styles.noteInput, {
-              borderColor: c.rule,
-              backgroundColor: c.bgCard,
+              backgroundColor: c.bg,
               color: c.ink,
-              fontFamily: f.serif,
+              fontFamily: f.script,
+              fontSize: 18,
+              lineHeight: 28,
             }]}
             textAlignVertical="top"
           />
+          <Text style={{
+            textAlign: 'right',
+            fontFamily: f.mono,
+            fontSize: 9,
+            letterSpacing: 2,
+            color: c.inkMuted,
+            textTransform: 'uppercase',
+            marginTop: 6,
+          }}>
+            {note.length} / {MAX_NOTE}
+          </Text>
         </View>
+      </ScrollView>
 
-        {/* Send */}
-        <View style={{ marginTop: 28, gap: 10 }}>
-          <PrimaryButton onPress={send}>
-            {busy ? 'Sending…' : 'Send to Romeo'}
-          </PrimaryButton>
-        </View>
+      {/* Floating Seal & Send button */}
+      <View style={[styles.footer, {
+        backgroundColor: c.bg,
+        borderTopColor: c.rule,
+        paddingBottom: insets.bottom + 12,
+      }]}>
+        <Pressable
+          onPress={send}
+          disabled={busy}
+          style={[styles.sendBtn, { backgroundColor: busy ? c.bgSunken : c.ink }]}
+        >
+          <Row gap={12} style={{ alignItems: 'center' }}>
+            <Animated.View style={sealAnim}>
+              <WaxSeal size={28} />
+            </Animated.View>
+            <Text style={{
+              fontFamily: f.mono,
+              fontSize: 10,
+              letterSpacing: 2.5,
+              color: c.bg,
+              textTransform: 'uppercase',
+            }}>
+              {busy ? 'Sending…' : 'Seal & Send'}
+            </Text>
+          </Row>
+        </Pressable>
       </View>
-    </ScreenScroll>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  choiceCard: {
-    borderWidth: 1,
-    padding: 20,
+  stamp: {
+    borderWidth: 2,
+    padding: 3,
     alignItems: 'center',
-    gap: 6,
   },
-  choiceEmoji: {
-    fontSize: 22,
-    color: '#B89766',
-  },
-  choiceLabel: {
-    fontSize: 24,
-    lineHeight: 28,
-    textAlign: 'center',
+  stampInner: {
+    width: '100%',
+    borderWidth: 1,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    alignItems: 'center',
   },
   noteInput: {
-    borderWidth: 1,
-    padding: 16,
-    fontSize: 18,
-    lineHeight: 27,
-    minHeight: 110,
+    minHeight: 200,
+    padding: 0,
+    borderWidth: 0,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+  },
+  sendBtn: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

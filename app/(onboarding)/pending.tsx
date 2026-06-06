@@ -1,3 +1,4 @@
+// RJ-APP/app/(onboarding)/pending.tsx
 import { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,11 +12,17 @@ import { WaxSeal } from '@/components/primitives/WaxSeal';
 import { TextLink } from '@/components/primitives/Button';
 import { useStatus } from '@/lib/hooks';
 import { supabase } from '@/lib/supabase';
+import { registerForPushNotifications } from '@/lib/push';
 
 export default function Pending() {
   const { c, f, d } = useRJTheme();
   const insets = useSafeAreaInsets();
   const { phase, loading } = useStatus(8000);
+
+  useEffect(() => {
+    // Register for push notifications while user waits
+    registerForPushNotifications().catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -24,8 +31,6 @@ export default function Pending() {
     } else if (phase === 'REJECTED') {
       router.replace('/(auth)/rejected');
     } else if (phase === 'PROFILE' || phase === 'REFERRAL') {
-      // Phase went backwards (admin reset, manual revert) — bounce
-      // through root router so user lands on the right screen.
       router.replace('/');
     }
   }, [phase, loading]);

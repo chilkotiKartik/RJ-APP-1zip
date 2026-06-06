@@ -1,9 +1,11 @@
 // RJ-APP/app/(main)/settings.tsx
 import { useEffect, useState } from 'react';
-import { View, Text, Switch, Pressable } from 'react-native';
+import { View, Text, Switch, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { safeBack } from '@/lib/nav';
 import * as Haptics from 'expo-haptics';
+import Constants from 'expo-constants';
+import * as WebBrowser from 'expo-web-browser';
 import { useRJTheme } from '@/theme/useRJTheme';
 import { ScreenScroll, Row, Stack } from '@/components/primitives/layout';
 import { MonoLabel } from '@/components/primitives/MonoLabel';
@@ -16,7 +18,10 @@ import { useStatus } from '@/lib/hooks';
 import { usePreferences } from '@/theme/preferences';
 import { supabase } from '@/lib/supabase';
 import { ARCHETYPES, ArchetypeId } from '@/lib/archetypes';
+import { isBiometricAvailable } from '@/lib/biometric';
 import type { DensityKey } from '@/theme/tokens';
+
+const APP_STORE_URL = 'https://apps.apple.com/app/romeo-juliet/id0000000000';
 
 function memberNoFromUserId(userId: string | null): string {
   if (!userId) return '0000';
@@ -32,30 +37,42 @@ function referralCodeFromName(name: string | null): string {
   return `${base || 'GUEST'}-${String(sum).padStart(2, '0')}`;
 }
 
-type RowItem = { k: string; v?: string; onPress?: () => void };
+function SettingsToggle({ label, value, onValueChange }: { label: string; value: boolean; onValueChange: (v: boolean) => void }) {
+  const { c, f } = useRJTheme();
+  return (
+    <View style={{
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      paddingVertical: 12, borderTopWidth: 1, borderTopColor: c.ruleSoft,
+    }}>
+      <Text style={{ fontFamily: f.serif, fontSize: 16, color: c.ink }}>{label}</Text>
+      <Switch
+        value={value}
+        onValueChange={v => { Haptics.selectionAsync(); onValueChange(v); }}
+        trackColor={{ false: c.ruleSoft, true: c.gold }}
+        thumbColor={value ? c.goldLight : c.bg}
+      />
+    </View>
+  );
+}
 
-function SettingsRow({ item, isFirst, isLast }: { item: RowItem; isFirst: boolean; isLast: boolean }) {
+function SettingsRow({ label, value, danger, onPress }: {
+  label: string; value?: string; danger?: boolean; onPress?: () => void;
+}) {
   const { c, f } = useRJTheme();
   return (
     <Pressable
-      onPress={() => { Haptics.selectionAsync(); item.onPress?.(); }}
+      onPress={() => { Haptics.selectionAsync(); onPress?.(); }}
       style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 14,
-        borderTopWidth: isFirst ? 1 : 1,
-        borderTopColor: c.ruleSoft,
-        borderBottomWidth: isLast ? 1 : 0,
-        borderBottomColor: c.ruleSoft,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingVertical: 14, borderTopWidth: 1, borderTopColor: c.ruleSoft,
       }}
     >
-      <Text style={{ fontFamily: f.serif, fontSize: 16, color: c.ink }}>{item.k}</Text>
-      {item.v ? (
-        <Text style={{ fontFamily: f.bodyI, fontSize: 14, color: c.inkMuted }}>{item.v}</Text>
-      ) : (
-        <IconArrow color={c.inkMuted} size={14} />
-      )}
+      <Text style={{ fontFamily: f.serif, fontSize: 16, color: danger ? c.wax : c.ink }}>{label}</Text>
+      {value ? (
+        <Text style={{ fontFamily: f.bodyI, fontSize: 14, color: c.inkMuted }}>{value}</Text>
+      ) : onPress ? (
+        <IconArrow color={danger ? c.wax : c.inkMuted} size={14} />
+      ) : null}
     </Pressable>
   );
 }
@@ -66,12 +83,18 @@ export default function Settings() {
   const { prefs, update } = usePreferences();
   const [email, setEmail] = useState<string | null>(null);
   const [densityOpen, setDensityOpen] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+
+  // Notification prefs stored in preferences (extend as needed)
+  const [notifLetter, setNotifLetter] = useState(true);
+  const [notifMatch, setNotifMatch] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getUser().then(({ data }) => {
       if (!cancelled) setEmail(data.user?.email ?? null);
     }).catch(() => {});
+    isBiometricAvailable().then(v => { if (!cancelled) setBiometricAvailable(v); }).catch(() => {});
     return () => { cancelled = true; };
   }, []);
 
@@ -80,54 +103,39 @@ export default function Settings() {
     : null;
 
   const onSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // best-effort; user wanted out
-    }
-    // Note: do NOT clear rj.theme.* keys — those are device-level prefs.
+    try { await supabase.auth.signOut(); } catch { /* best-effort */ }
     router.replace('/');
+  };
+
+  const onDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account, profile, and all correspondence. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete permanently',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                await supabase.from('profiles').delete().eq('user_id', user.id);
+                await supabase.auth.signOut();
+              }
+            } catch { /* best-effort */ }
+            router.replace('/');
+          },
+        },
+      ],
+    );
   };
 
   const truncatedEmail = email
     ? (email.length > 20 ? `${email.slice(0, 8)}…` : email)
     : '—';
 
-  const sections: { label: string; rows: RowItem[] }[] = [
-    {
-      label: 'You',
-      rows: [
-        { k: 'Name', v: profile?.first_name ?? '—' },
-        { k: 'Email', v: truncatedEmail },
-        { k: 'Your archetype', v: archetype?.name ?? '—' },
-        { k: 'Edit your photographs' },
-      ],
-    },
-    {
-      label: 'Correspondence',
-      rows: [
-        { k: 'Pause introductions', v: 'Off' },
-        { k: 'How often Romeo writes', v: 'When ready' },
-        { k: 'Reading speed', v: 'Slow' },
-      ],
-    },
-    {
-      label: 'Privacy',
-      rows: [
-        { k: 'Who can see your photographs', v: 'Romeo only' },
-        { k: 'Download my data' },
-        { k: 'Remove me from the room' },
-      ],
-    },
-    {
-      label: 'The room',
-      rows: [
-        { k: 'Your referral code', v: referralCodeFromName(profile?.first_name ?? null) },
-        { k: 'Notifications' },
-        { k: 'Sign out', onPress: onSignOut },
-      ],
-    },
-  ];
+  const version = (Constants.expoConfig?.version as string | undefined) ?? '1.0';
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
@@ -145,22 +153,13 @@ export default function Settings() {
         <View style={{ padding: d.pad, paddingBottom: 32 }}>
           {archetype && (
             <View style={{
-              flexDirection: 'row',
-              gap: 14,
-              alignItems: 'center',
-              padding: 14,
-              borderWidth: 1,
-              borderColor: c.rule,
-              marginBottom: 22,
-              backgroundColor: c.bgCard,
+              flexDirection: 'row', gap: 14, alignItems: 'center', padding: 14,
+              borderWidth: 1, borderColor: c.rule, marginBottom: 22, backgroundColor: c.bgCard,
             }}>
               <ArchetypeStamp archetype={archetype} height={70} color={c.gold} />
               <Stack gap={2}>
                 <MonoLabel size={7.5} color={c.gold}>Juliet sees you as</MonoLabel>
-                <Text style={{
-                  fontFamily: f.serifI, fontSize: 22, color: c.forest,
-                  lineHeight: 22, marginTop: 4,
-                }}>
+                <Text style={{ fontFamily: f.serifI, fontSize: 22, color: c.forest, lineHeight: 22, marginTop: 4 }}>
                   {archetype.name}
                 </Text>
                 <Text style={{
@@ -173,39 +172,18 @@ export default function Settings() {
             </View>
           )}
 
-          {/* Display section */}
+          {/* Display */}
           <View style={{ marginBottom: 22 }}>
             <MonoLabel size={8} color={c.gold}>Display</MonoLabel>
             <View style={{ marginTop: 6 }}>
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingVertical: 10,
-                borderTopWidth: 1,
-                borderTopColor: c.ruleSoft,
-              }}>
-                <Text style={{ fontFamily: f.serif, fontSize: 16, color: c.ink }}>Dark mode</Text>
-                <Switch
-                  testID="settings-dark-toggle"
-                  value={prefs.dark}
-                  onValueChange={v => update({ dark: v })}
-                  trackColor={{ false: c.ruleSoft, true: c.gold }}
-                  thumbColor={prefs.dark ? c.goldLight : c.bg}
-                />
-              </View>
+              <SettingsToggle label="Dark mode" value={prefs.dark} onValueChange={v => update({ dark: v })} />
               <Pressable
                 testID="settings-density-row"
                 onPress={() => { Haptics.selectionAsync(); setDensityOpen(o => !o); }}
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingVertical: 14,
-                  borderTopWidth: 1,
-                  borderTopColor: c.ruleSoft,
-                  borderBottomWidth: densityOpen ? 0 : 1,
-                  borderBottomColor: c.ruleSoft,
+                  flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                  paddingVertical: 14, borderTopWidth: 1, borderTopColor: c.ruleSoft,
+                  borderBottomWidth: densityOpen ? 0 : 1, borderBottomColor: c.ruleSoft,
                 }}
               >
                 <Text style={{ fontFamily: f.serif, fontSize: 16, color: c.ink }}>Density</Text>
@@ -214,40 +192,24 @@ export default function Settings() {
                 </Text>
               </Pressable>
               {densityOpen && (
-                <Row
-                  gap={8}
-                  style={{
-                    paddingVertical: 12,
-                    borderBottomWidth: 1,
-                    borderBottomColor: c.ruleSoft,
-                  }}
-                >
+                <Row gap={8} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: c.ruleSoft }}>
                   {(['compact', 'comfortable', 'spacious'] as DensityKey[]).map(k => {
                     const active = prefs.density === k;
                     return (
                       <Pressable
                         key={k}
                         testID={`settings-density-${k}`}
-                        onPress={() => {
-                          Haptics.selectionAsync();
-                          update({ density: k });
-                          setDensityOpen(false);
-                        }}
+                        onPress={() => { Haptics.selectionAsync(); update({ density: k }); setDensityOpen(false); }}
                         style={{
-                          flex: 1,
-                          borderWidth: 1,
-                          borderColor: active ? c.gold : c.rule,
-                          paddingVertical: 10,
-                          alignItems: 'center',
+                          flex: 1, borderWidth: 1, borderColor: active ? c.gold : c.rule,
+                          paddingVertical: 10, alignItems: 'center',
                           backgroundColor: active ? c.bgCard : 'transparent',
                         }}
                       >
                         <Text style={{
                           fontFamily: f.mono, fontSize: 9, letterSpacing: 9 * 0.22,
                           color: active ? c.forest : c.inkMuted, textTransform: 'uppercase',
-                        }}>
-                          {k}
-                        </Text>
+                        }}>{k}</Text>
                       </Pressable>
                     );
                   })}
@@ -256,32 +218,66 @@ export default function Settings() {
             </View>
           </View>
 
-          {sections.map(sec => (
-            <View key={sec.label} style={{ marginBottom: 22 }}>
-              <MonoLabel size={8} color={c.gold}>{sec.label}</MonoLabel>
-              <View style={{ marginTop: 6 }}>
-                {sec.rows.map((r, i) => (
-                  <SettingsRow
-                    key={r.k}
-                    item={r}
-                    isFirst={i === 0}
-                    isLast={i === sec.rows.length - 1}
-                  />
-                ))}
-              </View>
+          {/* Notifications */}
+          <View style={{ marginBottom: 22 }}>
+            <MonoLabel size={8} color={c.gold}>Notifications</MonoLabel>
+            <View style={{ marginTop: 6 }}>
+              <SettingsToggle label="Letter arrived" value={notifLetter} onValueChange={setNotifLetter} />
+              <SettingsToggle label="New match found" value={notifMatch} onValueChange={setNotifMatch} />
             </View>
-          ))}
+          </View>
+
+          {/* Privacy */}
+          <View style={{ marginBottom: 22 }}>
+            <MonoLabel size={8} color={c.gold}>Privacy</MonoLabel>
+            <View style={{ marginTop: 6 }}>
+              {biometricAvailable && (
+                <SettingsToggle
+                  label="Require Face ID / Fingerprint"
+                  value={prefs.biometric ?? false}
+                  onValueChange={v => update({ biometric: v })}
+                />
+              )}
+              <SettingsRow label="Who can see your photographs" value="Romeo only" />
+              <SettingsRow label="Download my data" onPress={() => {}} />
+            </View>
+          </View>
+
+          {/* You */}
+          <View style={{ marginBottom: 22 }}>
+            <MonoLabel size={8} color={c.gold}>You</MonoLabel>
+            <View style={{ marginTop: 6 }}>
+              <SettingsRow label="Name" value={profile?.first_name ?? '—'} />
+              <SettingsRow label="Email" value={truncatedEmail} />
+              <SettingsRow label="Your archetype" value={archetype?.name ?? '—'} />
+              <SettingsRow label="Your referral code" value={referralCodeFromName(profile?.first_name ?? null)} />
+              <SettingsRow label="Edit your photographs" onPress={() => router.push('/(onboarding)/profile' as never)} />
+            </View>
+          </View>
+
+          {/* Account */}
+          <View style={{ marginBottom: 22 }}>
+            <MonoLabel size={8} color={c.gold}>Account</MonoLabel>
+            <View style={{ marginTop: 6 }}>
+              <SettingsRow label="Sign out" onPress={onSignOut} />
+              <SettingsRow label="Delete Account" danger onPress={onDeleteAccount} />
+            </View>
+          </View>
+
+          {/* App */}
+          <View style={{ marginBottom: 22 }}>
+            <MonoLabel size={8} color={c.gold}>App</MonoLabel>
+            <View style={{ marginTop: 6 }}>
+              <SettingsRow label="Version" value={`v${version}`} />
+              <SettingsRow label="Rate on App Store" onPress={() => WebBrowser.openBrowserAsync(APP_STORE_URL)} />
+            </View>
+          </View>
 
           <Text style={{
-            marginTop: 12,
-            textAlign: 'center',
-            fontFamily: f.mono,
-            fontSize: 8,
-            letterSpacing: 8 * 0.22,
-            color: c.inkMuted,
-            textTransform: 'uppercase',
+            marginTop: 12, textAlign: 'center', fontFamily: f.mono, fontSize: 8,
+            letterSpacing: 8 * 0.22, color: c.inkMuted, textTransform: 'uppercase',
           }}>
-            Romeo &amp; Juliet · v1.0 · Est. 2026
+            Romeo &amp; Juliet · v{version} · Est. 2026
           </Text>
         </View>
       </ScreenScroll>

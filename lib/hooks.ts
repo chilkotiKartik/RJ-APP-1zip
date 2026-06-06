@@ -1,10 +1,7 @@
-import { useEffect, useState } from 'react';
+// RJ-APP/lib/hooks.ts
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from './supabase';
 
-// Source of truth: profiles_phase_check constraint in
-// Romeo-juliet/supabase/schema.sql. The web's /api/referral writes 'PROFILE'
-// after a successful referral code redemption — that's the post-signup,
-// pre-questionnaire state.
 export type Phase =
   | 'REFERRAL'
   | 'PROFILE'
@@ -25,6 +22,7 @@ export type Profile = {
   photo_urls: string[] | null;
   archetype: string | null;
   questionnaire_answers: Record<string, unknown> | null;
+  expo_push_token?: string | null;
 };
 
 export type StatusResult = {
@@ -39,6 +37,8 @@ export function useStatus(pollMs = 5000): StatusResult {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const userIdRef = useRef<string | null>(null);
 
   const fetch = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -49,6 +49,7 @@ export function useStatus(pollMs = 5000): StatusResult {
       return;
     }
     setUserId(user.id);
+    userIdRef.current = user.id;
     const { data } = await supabase
       .from('profiles')
       .select('*')
@@ -60,9 +61,56 @@ export function useStatus(pollMs = 5000): StatusResult {
 
   useEffect(() => {
     fetch();
-    if (!pollMs) return;
-    const id = setInterval(fetch, pollMs);
-    return () => clearInterval(id);
+
+    // Try Supabase Realtime first
+    let realtimeFailed = false;
+    const setupRealtime = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const ch = supabase
+        .channel(`profile-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            setProfile((payload.new as Profile) ?? null);
+          },
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            realtimeFailed = true;
+          }
+        });
+
+      channelRef.current = ch;
+    };
+
+    setupRealtime().catch(() => { realtimeFailed = true; });
+
+    // Fall back to polling if realtime fails (after 3s) or pollMs explicitly set
+    let pollId: ReturnType<typeof setInterval> | null = null;
+    const startPoll = () => {
+      if (pollMs && !pollId) {
+        pollId = setInterval(fetch, pollMs);
+      }
+    };
+
+    const fallbackCheck = setTimeout(() => {
+      if (realtimeFailed && pollMs) startPoll();
+      else if (pollMs) startPoll();
+    }, 3000);
+
+    return () => {
+      clearTimeout(fallbackCheck);
+      if (pollId) clearInterval(pollId);
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+    };
   }, [pollMs]);
 
   return {
@@ -114,8 +162,6 @@ export function useMatches(userId: string | null): MatchesResult {
         .or(`user_a.eq.${userId},user_b.eq.${userId}`)
         .order('created_at', { ascending: false });
       if (err) {
-        // Fallback for when the joined select isn't allowed by RLS / FK alias:
-        // re-query without the profile joins so the section still renders.
         const fb = await supabase
           .from('matches')
           .select('*')

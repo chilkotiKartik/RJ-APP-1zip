@@ -1,23 +1,34 @@
 // RJ-APP/app/(main)/home.tsx
-import { useMemo } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useMemo, useState, useCallback } from 'react';
+import {
+  View, Text, Pressable, StyleSheet, ScrollView, RefreshControl,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useRJTheme } from '@/theme/useRJTheme';
-import { ScreenScroll, Row, Stack } from '@/components/primitives/layout';
+import { Row, Stack } from '@/components/primitives/layout';
 import { MonoLabel } from '@/components/primitives/MonoLabel';
+import { OrnamentDivider } from '@/components/primitives/OrnamentDivider';
+import { PostmarkStamp } from '@/components/primitives/PostmarkStamp';
 import { PaperNoise } from '@/components/primitives/PaperNoise';
 import { JulietPortrait } from '@/components/primitives/JulietPortrait';
 import { IconBtn } from '@/components/primitives/IconBtn';
 import { IconCog, IconArrow } from '@/components/primitives/Icons';
+import { SkeletonLine, SkeletonBlock } from '@/components/primitives/Skeleton';
 import { useStatus, useMatches, otherUserName, MatchRow } from '@/lib/hooks';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning,';
+  if (h < 17) return 'Good afternoon,';
+  return 'Good evening,';
+}
+
 function letterNumberFromMatch(match: MatchRow | undefined): string {
   if (!match) return '0000';
-  // 4-digit deterministic number from match.id (uuid). Sum char codes mod 9999.
   let sum = 0;
   for (let i = 0; i < match.id.length; i++) sum = (sum + match.id.charCodeAt(i)) % 99991;
   return String(sum % 9999).padStart(4, '0');
@@ -35,17 +46,39 @@ function formatLetterDate(iso: string | null): string {
   return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()}`;
 }
 
+function SkeletonLetterCard() {
+  const { c } = useRJTheme();
+  return (
+    <View style={[styles.card, { backgroundColor: c.bgCard, borderColor: c.rule }]}>
+      <Row justify="space-between" style={{ marginBottom: 12 }}>
+        <SkeletonLine width={90} />
+        <SkeletonLine width={50} />
+      </Row>
+      <SkeletonLine width="70%" style={{ marginBottom: 10 }} />
+      <SkeletonLine width="90%" style={{ marginBottom: 8 }} />
+      <SkeletonLine width="65%" />
+    </View>
+  );
+}
+
 export default function Home() {
   const { c, f, d } = useRJTheme();
   const insets = useSafeAreaInsets();
-  const { phase, profile, userId } = useStatus(15000);
-  const { matches, loading: matchesLoading } = useMatches(userId);
+  const { phase, profile, userId, refresh: refreshStatus } = useStatus(15000);
+  const { matches, loading: matchesLoading, refresh: refreshMatches } = useMatches(userId);
+  const [refreshing, setRefreshing] = useState(false);
 
   const month = useMemo(() => MONTHS[new Date().getMonth()], []);
   const mostRecent: MatchRow | undefined = matches[0];
   const earlier = matches.slice(1, 4);
   const otherName = mostRecent ? otherUserName(mostRecent, userId) : null;
   const letterReady = phase === 'LETTER_READY';
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([refreshStatus(), refreshMatches()]);
+    setRefreshing(false);
+  }, [refreshStatus, refreshMatches]);
 
   const openLetter = () => {
     Haptics.selectionAsync();
@@ -56,8 +89,24 @@ export default function Home() {
     }
   };
 
+  const openTimeline = (matchId: string) => {
+    Haptics.selectionAsync();
+    router.push({ pathname: '/(main)/timeline', params: { matchId } } as never);
+  };
+
   return (
-    <ScreenScroll>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: c.bg }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={c.gold}
+          colors={[c.gold]}
+        />
+      }
+      showsVerticalScrollIndicator={false}
+    >
       <PaperNoise />
       <View style={{ padding: d.pad, paddingTop: d.pad + insets.top, paddingBottom: 32 }}>
         {/* Top bar */}
@@ -76,18 +125,28 @@ export default function Home() {
           </IconBtn>
         </Row>
 
+        {/* Time-of-day greeting */}
+        <View style={{ marginTop: 20, marginBottom: 4 }}>
+          <Text style={{ fontFamily: f.serifI, fontSize: 15, color: c.inkMuted }}>
+            {greeting()}
+          </Text>
+          <Text style={{ fontFamily: f.serifI, fontSize: 24, color: c.ink, lineHeight: 30 }}>
+            {profile?.first_name ?? 'friend'}.
+          </Text>
+        </View>
+
         {/* Most recent letter */}
-        <View style={{ marginTop: 24 }}>
+        <View style={{ marginTop: 20 }}>
           <MonoLabel size={8} color={c.gold}>Most recent</MonoLabel>
 
           {matchesLoading && (
-            <View style={[styles.card, {
-              backgroundColor: c.bgCard,
-              borderColor: c.rule,
-              opacity: 0.4,
-            }]}>
-              <View style={{ height: 70 }} />
-            </View>
+            <>
+              <SkeletonLetterCard />
+              <View style={{ height: 12 }} />
+              <SkeletonBlock height={52} style={{ marginTop: 4 }} />
+              <View style={{ height: 8 }} />
+              <SkeletonBlock height={52} style={{ marginTop: 4 }} />
+            </>
           )}
 
           {!matchesLoading && mostRecent && (
@@ -116,7 +175,9 @@ export default function Home() {
                 fontFamily: f.serif, fontSize: 16, color: c.ink,
                 marginTop: 8, lineHeight: 22, opacity: 0.9,
               }}>
-                I&rsquo;d like you to meet someone. {otherName !== 'Someone' ? `Their name is ${otherName}, and they are, I think, kind in a way you might not have guessed…` : 'A short note from me is inside…'}
+                {otherName !== 'Someone' && otherName
+                  ? `I'd like you to meet someone. Their name is ${otherName}, and they are, I think, kind in a way you might not have guessed…`
+                  : 'A short note from me is inside…'}
               </Text>
               <Row justify="space-between" style={{ marginTop: 14 }}>
                 <Text style={{ fontFamily: f.serifI, color: c.forest, fontSize: 16 }}>— R.</Text>
@@ -132,17 +193,23 @@ export default function Home() {
           )}
 
           {!matchesLoading && !mostRecent && (
-            <View style={{ marginTop: 14, alignItems: 'center', paddingVertical: 18 }}>
+            <View style={styles.emptyState}>
+              <PostmarkStamp size={72} />
+              <View style={{ marginVertical: 18 }}>
+                <OrnamentDivider />
+              </View>
               <Text style={{
                 fontFamily: f.serifI,
-                fontSize: 18,
-                color: c.inkMuted,
+                fontSize: 22,
+                color: c.ink,
                 textAlign: 'center',
-                maxWidth: 280,
-                lineHeight: 26,
+                lineHeight: 30,
               }}>
-                Your first letter will arrive soon.
+                Romeo is seeking you.
               </Text>
+              <MonoLabel size={9} color={c.inkMuted} style={{ marginTop: 10, textAlign: 'center' }}>
+                Your letter will arrive in due time.
+              </MonoLabel>
             </View>
           )}
         </View>
@@ -158,7 +225,7 @@ export default function Home() {
                   <Pressable
                     key={m.id}
                     testID={`home-earlier-${i}`}
-                    onPress={() => Haptics.selectionAsync()}
+                    onPress={() => openTimeline(m.id)}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -197,7 +264,7 @@ export default function Home() {
           </View>
         )}
 
-        {/* Speak to Juliet (only if user has completed at least one cycle) */}
+        {/* Speak to Juliet */}
         {phase === 'COMPLETE' && (
           <Pressable
             testID="home-speak-juliet"
@@ -213,9 +280,7 @@ export default function Home() {
               gap: 14,
             }}
           >
-            <View style={{ transform: [{ rotate: '0deg' }] }}>
-              <JulietPortrait width={56} height={56} rotate={0} label="" />
-            </View>
+            <JulietPortrait width={56} height={56} rotate={0} label="" />
             <View>
               <MonoLabel size={7.5}>If you&rsquo;d like to talk again</MonoLabel>
               <Text style={{ fontFamily: f.serifI, fontSize: 19, color: c.ink, marginTop: 4 }}>
@@ -228,7 +293,7 @@ export default function Home() {
           </Pressable>
         )}
       </View>
-    </ScreenScroll>
+    </ScrollView>
   );
 }
 
@@ -241,5 +306,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 26,
     elevation: 3,
+  },
+  emptyState: {
+    marginTop: 28,
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 24,
   },
 });

@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "GtK6hV29PzpA8-QkM1G-g"
+uri = "file://assets/icon.png"
+type = "image"
+title = "romeo juliet wax seal icon"
+
+[[generated]]
+id = "bCxxx16E1IBn227Sf2rjj"
+uri = "file://assets/adaptive-icon.png"
+type = "image"
+title = "romeo juliet wax seal adaptive icon"
+
+[[generated]]
+id = "YD-fKt9toqu8giDgVvC5i"
+uri = "file://assets/splash.png"
+type = "image"
+title = "romeo juliet splash screen"
