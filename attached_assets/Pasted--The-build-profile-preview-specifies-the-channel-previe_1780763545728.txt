@@ -1,0 +1,54 @@
+
+
+The build profile "preview" specifies the channel "preview", but the "expo-updates" package is missing. To use channels in your builds, install the "expo-updates" package and run "eas update:configure".
+✔ Would you like to install the "expo-updates" package and configure EAS Update now? … yes
+> npx expo install expo-updates
+[expo-cli] › Installing 1 SDK 53.0.0 compatible native module using npm
+[expo-cli] > npm install
+[expo-cli] npm error code ERESOLVE
+[expo-cli] npm error ERESOLVE could not resolve
+[expo-cli] npm error
+[expo-cli] npm error While resolving: @livekit/react-native@2.11.0
+[expo-cli] npm error Found: @livekit/react-native-webrtc@137.0.3
+[expo-cli] npm error node_modules/@livekit/react-native-webrtc
+[expo-cli] npm error   peer @livekit/react-native-webrtc@"^137.0.2" from @elevenlabs/react-native@1.2.3
+[expo-cli] npm error   node_modules/@elevenlabs/react-native
+[expo-cli] npm error     @elevenlabs/react-native@"^1.2.3" from the root project
+[expo-cli] npm error
+[expo-cli] npm error Could not resolve dependency:
+[expo-cli] npm error peer @livekit/react-native-webrtc@"^144.1.0" from @livekit/react-native@2.11.0
+[expo-cli] npm error node_modules/@livekit/react-native
+[expo-cli] npm error   peer @livekit/react-native@"^2.9.2" from @elevenlabs/react-native@1.2.3
+[expo-cli] npm error   node_modules/@elevenlabs/react-native
+[expo-cli] npm error     @elevenlabs/react-native@"^1.2.3" from the root project
+[expo-cli] npm error
+[expo-cli] npm error Conflicting peer dependency: @livekit/react-native-webrtc@144.1.0
+[expo-cli] npm error node_modules/@livekit/react-native-webrtc
+[expo-cli] npm error   peer @livekit/react-native-webrtc@"^144.1.0" from @livekit/react-native@2.11.0
+[expo-cli] npm error   node_modules/@livekit/react-native
+[expo-cli] npm error     peer @livekit/react-native@"^2.9.2" from @elevenlabs/react-native@1.2.3
+[expo-cli] npm error     node_modules/@elevenlabs/react-native
+[expo-cli] npm error       @elevenlabs/react-native@"^1.2.3" from the root project
+[expo-cli] npm error
+[expo-cli] npm error Fix the upstream dependency conflict, or retry
+[expo-cli] npm error this command with --force or --legacy-peer-deps
+[expo-cli] npm error to accept an incorrect (and potentially broken) dependency resolution.
+[expo-cli] npm error
+[expo-cli] npm error
+[expo-cli] npm error For a full report see:
+[expo-cli] npm error /home/runner/.npm/_logs/2026-06-06T16_31_45_372Z-eresolve-report.txt
+[expo-cli] npm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-06-06T16_31_45_372Z-debug-0.log
+[expo-cli] Error: npm install exited with non-zero code: 1
+[expo-cli] Error: npm install exited with non-zero code: 1
+[expo-cli]     at ChildProcess.completionListener (/home/runner/workspace/node_modules/@expo/spawn-async/build/spawnAsync.js:113:23)
+[expo-cli]     at Object.onceWrapper (node:events:639:26)
+[expo-cli]     at ChildProcess.emit (node:events:524:28)
+[expo-cli]     at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+[expo-cli]     ...
+[expo-cli]     at spawnAsync (/home/runner/workspace/node_modules/@expo/spawn-async/build/spawnAsync.js:9:23)
+[expo-cli]     at NpmPackageManager.runAsync (/home/runner/workspace/node_modules/@expo/package-manager/build/node/BasePackageManager.js:41:42)
+[expo-cli]     at /home/runner/workspace/node_modules/@expo/package-manager/build/node/NpmPackageManager.js:36:20
+[expo-cli]     at /home/runner/workspace/node_modules/@expo/package-manager/build/utils/spawn.js:14:34
+/home/runner/workspace/node_modules/expo/bin/cli install expo-updates exited with non-zero code: 1
+    Error: build command failed.
+~/workspace$ 
