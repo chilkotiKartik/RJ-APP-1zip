@@ -10,14 +10,12 @@
       "android": {
         "buildType": "apk"
       },
-      "channel": "development",
       "env": {
         "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview",
       "android": {
         "buildType": "apk"
       },
@@ -27,7 +25,6 @@
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production",
       "env": {
         "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }
