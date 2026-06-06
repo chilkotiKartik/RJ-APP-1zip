@@ -79,5 +79,8 @@
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-url-polyfill|expo|expo-.*|@expo/.*|@supabase/.*)/)"
     ]
   },
+  "overrides": {
+    "@livekit/react-native": "2.9.8"
+  },
   "private": true
 }
