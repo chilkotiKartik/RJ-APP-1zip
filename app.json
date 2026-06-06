@@ -26,15 +26,17 @@
       "package": "com.romeojuliet.app",
       "softwareKeyboardLayoutMode": "resize"
     },
-    "web": {
-      "bundler": "metro",
-      "output": "single",
-      "favicon": "./assets/icon.png"
-    },
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#FBF2E3"
+        }
+      ]
     ],
     "experiments": { "typedRoutes": true }
   }
