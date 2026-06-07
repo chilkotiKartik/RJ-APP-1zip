@@ -1,5 +1,6 @@
 // RJ-APP/components/primitives/ArchetypeStamp.tsx
-import { Image, ImageStyle } from 'react-native';
+import { ImageStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { Archetype } from '@/lib/archetypes';
 import { useRJTheme } from '@/theme/useRJTheme';
 
@@ -14,8 +15,9 @@ export function ArchetypeStamp({
     <Image
       source={archetype.image}
       accessibilityLabel={archetype.name}
-      style={[{ width: height * ASPECT, height, tintColor }, style]}
-      resizeMode="contain"
+      tintColor={tintColor}
+      style={[{ width: height * ASPECT, height }, style]}
+      contentFit="contain"
     />
   );
 }

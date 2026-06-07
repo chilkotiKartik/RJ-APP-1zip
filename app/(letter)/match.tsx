@@ -2,7 +2,7 @@
 // Match profile — fetches real data from Supabase.
 import { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, Pressable,
+  View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, Pressable, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -185,11 +185,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowOffset: { width: 0, height: 10 },
-    shadowRadius: 22,
     elevation: 4,
+    ...Platform.select({
+      web: { boxShadow: '0px 10px 22px rgba(0,0,0,0.18)' } as any,
+      default: { shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 22 },
+    }),
   },
   photoCounter: {
     position: 'absolute',

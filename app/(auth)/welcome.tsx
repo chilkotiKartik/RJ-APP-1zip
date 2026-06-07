@@ -1,6 +1,6 @@
 // RJ-APP/app/(auth)/welcome.tsx
 import { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, Animated, Easing, Platform } from 'react-native';
 import Svg, { Rect, Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -90,8 +90,11 @@ const styles = StyleSheet.create({
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24 },
   envelope: {
     width: ENV_W, height: ENV_H, position: 'relative',
-    shadowColor: '#000', shadowOpacity: 0.35, shadowOffset: { width: 0, height: 20 }, shadowRadius: 44,
     elevation: 8,
+    ...Platform.select({
+      web: { boxShadow: '0px 20px 44px rgba(0,0,0,0.35)' } as any,
+      default: { shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.35, shadowRadius: 44 },
+    }),
   },
   seal: {
     position: 'absolute', top: '38%', left: '50%',

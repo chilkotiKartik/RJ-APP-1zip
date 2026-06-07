@@ -1,7 +1,7 @@
 // RJ-APP/app/(main)/home.tsx
 import { useMemo, useState, useCallback } from 'react';
 import {
-  View, Text, Pressable, StyleSheet, ScrollView, RefreshControl,
+  View, Text, Pressable, StyleSheet, ScrollView, RefreshControl, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -156,7 +156,6 @@ export default function Home() {
               style={[styles.card, {
                 backgroundColor: c.bgCard,
                 borderColor: c.rule,
-                shadowColor: c.ink,
               }]}
             >
               <Row justify="space-between" style={{ marginBottom: 10 }}>
@@ -302,10 +301,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
     padding: 18,
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.18,
-    shadowRadius: 26,
     elevation: 3,
+    ...Platform.select({
+      web: { boxShadow: '0px 12px 26px rgba(0,0,0,0.18)' } as any,
+      default: { shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.18, shadowRadius: 26 },
+    }),
   },
   emptyState: {
     marginTop: 28,

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Pressable, View, StyleSheet } from 'react-native';
+import { Pressable, View, StyleSheet, Platform } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import Animated, {
   useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing,
@@ -72,7 +72,10 @@ const styles = StyleSheet.create({
   ring: { position: 'absolute', borderRadius: 9999, borderWidth: 1 },
   btn: {
     borderWidth: 2, alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOpacity: 0.15, shadowOffset: { width: 0, height: 4 }, shadowRadius: 12,
     elevation: 6,
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 12px rgba(0,0,0,0.15)' } as any,
+      default: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12 },
+    }),
   },
 });

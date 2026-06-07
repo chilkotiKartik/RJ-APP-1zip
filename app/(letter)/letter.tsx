@@ -1,7 +1,7 @@
 // RJ-APP/app/(letter)/letter.tsx
 // Romeo's letter — Caveat handwriting font, page curl, ink blot decorations.
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { safeBack } from '@/lib/nav';
@@ -155,12 +155,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 28,
     paddingBottom: 36,
-    shadowColor: '#000',
-    shadowOpacity: 0.14,
-    shadowOffset: { width: 0, height: 12 },
-    shadowRadius: 28,
     elevation: 4,
     overflow: 'hidden',
+    ...Platform.select({
+      web: { boxShadow: '0px 12px 28px rgba(0,0,0,0.14)' } as any,
+      default: { shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.14, shadowRadius: 28 },
+    }),
   },
   curlCorner: {
     position: 'absolute',

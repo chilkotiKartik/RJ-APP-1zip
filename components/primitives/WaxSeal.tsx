@@ -1,6 +1,6 @@
 // RJ-APP/components/primitives/WaxSeal.tsx
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import Svg, { Defs, RadialGradient, Stop, Path, Circle } from 'react-native-svg';
 import Animated, {
   useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing,
@@ -40,13 +40,11 @@ export function WaxSeal({ size = 64, pulse = false }: { size?: number; pulse?: b
 
   return (
     <Animated.View style={[{ width: size, height: size }, animStyle,
-      {
-        shadowColor: c.waxDeep,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 4,
-      }
+      { elevation: 4 },
+      Platform.select({
+        web: { boxShadow: '0px 2px 4px rgba(90,20,20,0.3)' } as any,
+        default: { shadowColor: c.waxDeep, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4 },
+      }),
     ]}>
       <Svg width={size} height={size} viewBox="0 0 100 100">
         <Defs>

@@ -1,6 +1,6 @@
 // RJ-APP/components/letter/EnvelopeOpening.tsx
 import { useEffect } from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import Svg, { Rect, Path } from 'react-native-svg';
 import Animated, {
   useSharedValue, useAnimatedStyle, withSequence, withTiming, withDelay, Easing, runOnJS,
@@ -130,8 +130,11 @@ export function EnvelopeOpening({ onComplete }: { onComplete?: () => void }) {
 const styles = StyleSheet.create({
   letter: {
     borderWidth: 1, padding: 16,
-    shadowColor: '#000', shadowOpacity: 0.18, shadowOffset: { width: 0, height: 12 }, shadowRadius: 24,
-    elevation: 6,
     marginBottom: 30,
+    elevation: 6,
+    ...Platform.select({
+      web: { boxShadow: '0px 12px 24px rgba(0,0,0,0.18)' } as any,
+      default: { shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.18, shadowRadius: 24 },
+    }),
   },
 });

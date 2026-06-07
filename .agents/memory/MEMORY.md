@@ -7,3 +7,6 @@
 - [RosePetals SVG path bug](rose-petals-svg.md) — cubic bezier path needs space: "C0,${h*0.35} 0,0" not "C0,${h*0.35}0,0"; missing space makes the d attr invalid on web SVG.
 - [pointerEvents prop deprecation](pointer-events-deprecation.md) — SDK 54 new arch: use style={{ pointerEvents: 'none' }} not pointerEvents="none" prop on View/Animated.View.
 - [voice screen error handling](voice-error-nav.md) — set didEnd.current=true in onError to stop onDisconnect from navigating away; reset it in the Alert OK handler so the user can retry.
+- [Expo Go voice fallback](expo-go-voice-fallback.md) — @elevenlabs/react-native uses LiveKit native modules not in Expo Go; detect with Constants.executionEnvironment === 'storeClient' and render a fallback instead of ConversationProvider.
+- [RN shadow cross-platform](rn-shadow-cross-platform.md) — shadow* props deprecated on web; use Platform.select with boxShadow string for web and shadow* for default; StyleSheet.create accepts Platform.select spread fine.
+- [expo-image tintColor](expo-image-tintcolor.md) — RN Image tintColor in style is deprecated (new arch); switch to expo-image and pass tintColor as a prop + contentFit="contain".
