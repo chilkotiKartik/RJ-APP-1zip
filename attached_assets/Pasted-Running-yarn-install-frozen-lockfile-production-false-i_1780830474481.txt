@@ -1,0 +1,37 @@
+Running "yarn install --frozen-lockfile --production false" in /home/expo/workingdir/build directory
+yarn install v1.22.22
+info No lockfile found.
+[1/4] Resolving packages...
+warning expo > @expo/config-plugins > xcode > uuid@7.0.3: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+warning expo > @expo/cli > @react-native/dev-middleware > chromium-edge-launcher > rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+warning expo > @expo/cli > @react-native/dev-middleware > chromium-edge-launcher > rimraf > glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+warning expo > babel-preset-expo > @react-native/babel-preset > @react-native/babel-plugin-codegen > @react-native/codegen > glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+warning expo > @expo/cli > @react-native/dev-middleware > chromium-edge-launcher > rimraf > glob > inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+warning expo-splash-screen > @expo/prebuild-config > @expo/config > glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+warning expo-splash-screen > @expo/prebuild-config > @expo/config-plugins > glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+warning expo-splash-screen > @expo/prebuild-config > @expo/config > sucrase > glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+warning react-native > glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+warning react-native > @react-native/codegen > glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+warning react-native > babel-jest > babel-plugin-istanbul > test-exclude > glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+warning @expo/ngrok > uuid@3.4.0: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+warning @testing-library/jest-native@5.4.3: DEPRECATED: This package is no longer maintained.
+Please use the built-in Jest matchers available in @testing-library/react-native v12.4+.
+
+See migration guide: https://callstack.github.io/react-native-testing-library/docs/migration/jest-matchers
+warning @testing-library/react-native@12.9.0: React Native Testing Library v12 is no longer maintained. Please upgrade to v13 or v14.
+warning eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+warning eslint > @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+warning eslint > file-entry-cache > flat-cache > rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+warning eslint > @humanwhocodes/config-array > @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+warning jest > jest-cli > jest-config > glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+warning jest > @jest/core > jest-runtime > glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+warning jest > @jest/core > @jest/reporters > glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+warning jest-expo > jest-environment-jsdom > jsdom > abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+warning jest-expo > jest-environment-jsdom > jsdom > data-urls > abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+warning jest-expo > jest-environment-jsdom > jsdom > domexception@4.0.0: Use your platform's native DOMException instead
+warning jest-expo > jest-environment-jsdom > jsdom > whatwg-encoding@2.0.0: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+warning jest-expo > jest-environment-jsdom > jsdom > html-encoding-sniffer > whatwg-encoding@2.0.0: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+[2/4] Fetching packages...
+error metro-core@0.83.3: The engine "node" is incompatible with this module. Expected version ">=20.19.4". Got "20.19.2"
+error Found incompatible module.
+info Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command.
