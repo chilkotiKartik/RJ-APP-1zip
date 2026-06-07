@@ -10,3 +10,4 @@
 - [Expo Go voice fallback](expo-go-voice-fallback.md) — @elevenlabs/react-native uses LiveKit native modules not in Expo Go; detect with Constants.executionEnvironment === 'storeClient' and render a fallback instead of ConversationProvider.
 - [RN shadow cross-platform](rn-shadow-cross-platform.md) — shadow* props deprecated on web; use Platform.select with boxShadow string for web and shadow* for default; StyleSheet.create accepts Platform.select spread fine.
 - [expo-image tintColor](expo-image-tintcolor.md) — RN Image tintColor in style is deprecated (new arch); switch to expo-image and pass tintColor as a prop + contentFit="contain".
+- [ReactNativeApplicationEntryPoint fix](main-application-fix.md) — EAS prebuild generates MainApplication.kt using ReactNativeApplicationEntryPoint which doesn't exist in RN 0.79.7; fix with a config plugin that writes the DefaultReactNativeHost pattern instead.
