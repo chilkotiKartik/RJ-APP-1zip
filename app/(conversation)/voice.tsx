@@ -80,7 +80,12 @@ function VoiceInner() {
     onError: (errMessage: string) => {
       console.warn('ElevenLabs error:', errMessage);
       if (timerRef.current) clearInterval(timerRef.current);
-      Alert.alert('The connection dropped', "Juliet couldn't connect just now. Please try again.");
+      // Prevent onDisconnect from navigating away after an error —
+      // we stay on this screen so the user can try again.
+      didEnd.current = true;
+      Alert.alert('The connection dropped', "Juliet couldn't connect just now. Please try again.", [
+        { text: 'OK', onPress: () => { didEnd.current = false; } },
+      ]);
     },
   });
 

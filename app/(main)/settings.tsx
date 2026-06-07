@@ -85,9 +85,9 @@ export default function Settings() {
   const [densityOpen, setDensityOpen] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
 
-  // Notification prefs stored in preferences (extend as needed)
-  const [notifLetter, setNotifLetter] = useState(true);
-  const [notifMatch, setNotifMatch] = useState(true);
+  // Notification prefs — persisted via usePreferences
+  const notifLetter = prefs.notifLetter;
+  const notifMatch  = prefs.notifMatch;
 
   useEffect(() => {
     let cancelled = false;
@@ -222,8 +222,8 @@ export default function Settings() {
           <View style={{ marginBottom: 22 }}>
             <MonoLabel size={8} color={c.gold}>Notifications</MonoLabel>
             <View style={{ marginTop: 6 }}>
-              <SettingsToggle label="Letter arrived" value={notifLetter} onValueChange={setNotifLetter} />
-              <SettingsToggle label="New match found" value={notifMatch} onValueChange={setNotifMatch} />
+              <SettingsToggle label="Letter arrived" value={notifLetter} onValueChange={v => update({ notifLetter: v })} />
+              <SettingsToggle label="New match found" value={notifMatch} onValueChange={v => update({ notifMatch: v })} />
             </View>
           </View>
 

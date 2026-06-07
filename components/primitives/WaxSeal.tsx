@@ -60,7 +60,7 @@ export function WaxSeal({ size = 64, pulse = false }: { size?: number; pulse?: b
         {/* Radial highlight — top-left embossing */}
         <Circle cx="30" cy="26" r="12" fill="white" fillOpacity={0.13} />
       </Svg>
-      <View style={styles.monogram} pointerEvents="none">
+      <View style={[styles.monogram, { pointerEvents: 'none' }]}>
         <Text style={{
           fontFamily: f.serifI, fontSize: size * 0.42, color: c.goldLight,
         }}>R<Text style={{ fontSize: size * 0.22, opacity: 0.7 }}>&</Text>J</Text>

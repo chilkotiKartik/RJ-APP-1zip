@@ -18,7 +18,7 @@ const COUNT = 12;
 const COLORS = ['#B89766', '#B89766', '#8B3A3A', '#B89766', '#8B3A3A', '#B89766'];
 
 function petalPath(w: number, h: number) {
-  return `M${w / 2},0 C${w * 0.9},0 ${w},${h * 0.35} ${w / 2},${h} C0,${h * 0.35}0,0 ${w / 2},0 Z`;
+  return `M${w / 2},0 C${w * 0.9},0 ${w},${h * 0.35} ${w / 2},${h} C0,${h * 0.35} 0,0 ${w / 2},0 Z`;
 }
 
 type PetalConfig = {
@@ -88,7 +88,7 @@ function Petal({ x, startY, endX, endY, rot, color, delay, duration, size, activ
   }));
 
   return (
-    <Animated.View style={style} pointerEvents="none">
+    <Animated.View style={[style, { pointerEvents: 'none' }]}>
       <Svg width={size} height={size * 1.5} viewBox={`0 0 ${size} ${size * 1.5}`}>
         <Path d={petalPath(size, size * 1.5)} fill={color} fillOpacity={0.82} />
       </Svg>
@@ -104,7 +104,7 @@ export function RosePetals({ running }: Props) {
   const petals = useRef<PetalConfig[]>(makePetals());
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
       {petals.current.map((p, i) => (
         <Petal key={i} {...p} active={running} />
       ))}

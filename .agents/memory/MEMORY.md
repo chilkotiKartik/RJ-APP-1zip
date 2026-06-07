@@ -3,3 +3,7 @@
 - [expo-notifications web stub](expo-notifications-web.md) — expo-notifications lacks web stubs for some modules; create lib/push.web.ts as a no-op stub; Metro picks .web.ts automatically on web.
 - [npm legacy peer deps](npm-peer-deps.md) — all installs require --legacy-peer-deps due to @livekit/react-native-webrtc conflict with @elevenlabs/react-native.
 - [EAS build livekit peer dep fix](eas-livekit-fix.md) — pin @livekit/react-native and @livekit/react-native-webrtc as explicit direct deps to eliminate peer dep conflict from package-lock.json entirely.
+- [expo-notifications SDK 54 projectId](expo-notifications-projectid.md) — getExpoPushTokenAsync() requires explicit { projectId } from Constants.expoConfig.extra.eas.projectId in SDK 54.
+- [RosePetals SVG path bug](rose-petals-svg.md) — cubic bezier path needs space: "C0,${h*0.35} 0,0" not "C0,${h*0.35}0,0"; missing space makes the d attr invalid on web SVG.
+- [pointerEvents prop deprecation](pointer-events-deprecation.md) — SDK 54 new arch: use style={{ pointerEvents: 'none' }} not pointerEvents="none" prop on View/Animated.View.
+- [voice screen error handling](voice-error-nav.md) — set didEnd.current=true in onError to stop onDisconnect from navigating away; reset it in the Alert OK handler so the user can retry.

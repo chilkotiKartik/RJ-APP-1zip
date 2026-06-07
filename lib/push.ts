@@ -1,6 +1,7 @@
 // RJ-APP/lib/push.ts
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import { supabase } from './supabase';
 
 Notifications.setNotificationHandler({
@@ -25,7 +26,12 @@ export async function registerForPushNotifications(): Promise<string | null> {
 
   let token: string | null = null;
   try {
-    const result = await Notifications.getExpoPushTokenAsync();
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ??
+      (Constants as unknown as { easConfig?: { projectId?: string } }).easConfig?.projectId;
+    const result = await Notifications.getExpoPushTokenAsync(
+      projectId ? { projectId } : undefined,
+    );
     token = result.data;
   } catch {
     return null;

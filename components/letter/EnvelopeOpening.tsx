@@ -120,8 +120,7 @@ export function EnvelopeOpening({ onComplete }: { onComplete?: () => void }) {
 
         {/* Flash overlay */}
         <Animated.View
-          style={[StyleSheet.absoluteFill, { backgroundColor: 'white', borderRadius: 4 }, flashStyle]}
-          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: 'white', borderRadius: 4, pointerEvents: 'none' }, flashStyle]}
         />
       </View>
     </Pressable>
