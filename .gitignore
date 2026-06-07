@@ -7,3 +7,7 @@ android/
 .env.local
 .DS_Store
 expo-env.d.ts
+# yarn.lock must NOT be committed from Replit — its resolved URLs point to
+# package-firewall.replit.local which is unreachable on EAS build servers.
+# EAS will generate a fresh lockfile from the public npm registry on each build.
+yarn.lock
