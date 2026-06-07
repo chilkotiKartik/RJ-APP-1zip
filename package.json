@@ -84,6 +84,10 @@
     "@livekit/react-native": "2.9.8",
     "@livekit/react-native-webrtc": "137.0.3"
   },
+  "resolutions": {
+    "@livekit/react-native": "2.9.8",
+    "@livekit/react-native-webrtc": "137.0.3"
+  },
   "expo": {
     "doctor": {
       "reactNativeDirectoryCheck": {
