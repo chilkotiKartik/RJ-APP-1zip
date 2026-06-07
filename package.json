@@ -109,5 +109,8 @@
       ]
     }
   },
-  "private": true
+  "private": true,
+  "engines": {
+    "node": ">=20.19.4"
+  }
 }
