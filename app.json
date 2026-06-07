@@ -27,7 +27,11 @@
         "backgroundColor": "#FBF2E3"
       },
       "package": "com.romeojuliet.app",
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "resize",
+      "minSdkVersion": 24,
+      "compileSdkVersion": 35,
+      "targetSdkVersion": 35,
+      "buildToolsVersion": "35.0.0"
     },
     "plugins": [
       "expo-router",
