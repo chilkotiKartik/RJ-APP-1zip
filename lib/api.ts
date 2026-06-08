@@ -1,7 +1,7 @@
 // RJ-APP/lib/api.ts
 import { supabase } from './supabase';
 
-const WEB_BASE = process.env.EXPO_PUBLIC_WEB_BASE ?? 'http://localhost:3000';
+const WEB_BASE = process.env.EXPO_PUBLIC_WEB_BASE ?? '';
 
 async function authedFetch(path: string, init: RequestInit = {}) {
   const { data: { session } } = await supabase.auth.getSession();
