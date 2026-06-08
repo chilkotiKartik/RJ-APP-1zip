@@ -58,3 +58,6 @@ externalPort = 8080
 
 [userenv.shared]
 NODE_VERSION = "20.19.4"
+EMAIL_FROM = "product@romeojuliet.love"
+EMAIL_FROM_NAME = "Romeo & Juliet"
+APP_URL = "https://romeojuliet.love"
