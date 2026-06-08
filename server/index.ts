@@ -5,6 +5,8 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import referralRouter from './routes/referral';
 import profileRouter from './routes/profile';
 import matchRouter from './routes/match';
+import archetypeRouter from './routes/archetype';
+import emailRouter from './routes/email';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '5000');
@@ -21,6 +23,8 @@ app.get('/health', (_req, res) => {
 app.use('/api/referral', referralRouter);
 app.use('/api/profile', profileRouter);
 app.use('/api/match', matchRouter);
+app.use('/api/archetype', archetypeRouter);
+app.use('/api/email', emailRouter);
 
 if (IS_PROD) {
   const distPath = path.join(process.cwd(), 'dist');
