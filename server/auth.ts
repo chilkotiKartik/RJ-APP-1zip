@@ -1,9 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Request, Response, NextFunction } from 'express';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+// The two EXPO_PUBLIC_ secrets are sometimes stored swapped in the Secrets UI.
+// We detect which is which by checking which value starts with "https://".
+const raw1 = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+const raw2 = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+
+const supabaseUrl = raw1.startsWith('https://') ? raw1 : raw2.startsWith('https://') ? raw2 : '';
+const anonKey     = raw1.startsWith('https://') ? raw2 : raw2.startsWith('https://') ? raw1 : '';
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export function getAdminClient() {
   const key = serviceRoleKey || anonKey;

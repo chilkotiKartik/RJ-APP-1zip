@@ -3,8 +3,13 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import { storage } from './storage';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
-const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+// The two EXPO_PUBLIC_ secrets are sometimes stored swapped in the Secrets UI.
+// We detect which is which by checking which value starts with "https://".
+const raw1 = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+const raw2 = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+
+const url  = raw1.startsWith('https://') ? raw1 : raw2.startsWith('https://') ? raw2 : '';
+const anon = raw1.startsWith('https://') ? raw2 : raw2.startsWith('https://') ? raw1 : '';
 
 if (!url || !anon) {
   console.warn(
@@ -13,8 +18,6 @@ if (!url || !anon) {
   );
 }
 
-// Use placeholder values so the client can be constructed without crashing.
-// All requests will fail gracefully when credentials are missing.
 export const supabase = createClient(url || 'https://placeholder.supabase.co', anon || 'placeholder', {
   auth: {
     storage,
