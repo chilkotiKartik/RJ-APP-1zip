@@ -43,7 +43,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx expo start --web --port 8080"
+args = "npx expo start --port 8080"
 waitForPort = 8080
 
 [[ports]]
@@ -61,3 +61,4 @@ NODE_VERSION = "20.19.4"
 EMAIL_FROM = "product@romeojuliet.love"
 EMAIL_FROM_NAME = "Romeo & Juliet"
 APP_URL = "https://romeojuliet.love"
+EXPO_PUBLIC_API_URL = "https://f2bf1624-84d1-4f32-8c8f-c5d4ecc5395b-00-2vjuetglalcgo.sisko.replit.dev"

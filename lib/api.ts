@@ -1,14 +1,16 @@
 // RJ-APP/lib/api.ts
 import { supabase } from './supabase';
 
-const WEB_BASE = process.env.EXPO_PUBLIC_WEB_BASE ?? '';
+// For Expo Go on a real device, relative URLs don't work — we need the full server URL.
+// Set EXPO_PUBLIC_API_URL to your Replit dev domain (or deployed URL in production).
+const API_BASE = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/$/, '');
 
 async function authedFetch(path: string, init: RequestInit = {}) {
   const { data: { session } } = await supabase.auth.getSession();
   const headers = new Headers(init.headers as HeadersInit | undefined);
   if (session?.access_token) headers.set('Authorization', `Bearer ${session.access_token}`);
   headers.set('Content-Type', 'application/json');
-  return fetch(`${WEB_BASE}${path}`, { ...init, headers });
+  return fetch(`${API_BASE}${path}`, { ...init, headers });
 }
 
 export async function redeemReferral(code: string): Promise<{ ok: boolean; error?: string }> {
@@ -18,7 +20,7 @@ export async function redeemReferral(code: string): Promise<{ ok: boolean; error
   });
   if (!res.ok) {
     let error = 'Invalid code';
-    try { error = (await res.json()).error ?? error; } catch { /* ignore parse errors */ }
+    try { error = (await res.json()).error ?? error; } catch { /* ignore */ }
     return { ok: false, error };
   }
   return { ok: true };
@@ -39,7 +41,7 @@ export async function saveProfile(input: {
   });
   if (!res.ok) {
     let error = 'Could not save profile';
-    try { error = (await res.json()).error ?? error; } catch { /* ignore parse errors */ }
+    try { error = (await res.json()).error ?? error; } catch { /* ignore */ }
     return { ok: false, error };
   }
   return { ok: true };
@@ -62,7 +64,7 @@ export async function respondToMatch(
     }
     return { ok: true };
   } catch {
-    // Fallback: write directly to Supabase if web backend unreachable
+    // Fallback: write directly to Supabase if API unreachable
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return { ok: false, error: 'Not authenticated' };
@@ -83,4 +85,36 @@ export async function respondToMatch(
       return { ok: false, error: e2 instanceof Error ? e2.message : 'unknown' };
     }
   }
+}
+
+export async function classifyArchetype(
+  answers: Record<string, string>,
+): Promise<{ ok: boolean; archetype?: string; error?: string }> {
+  const res = await authedFetch('/api/archetype/classify', {
+    method: 'POST',
+    body: JSON.stringify({ answers }),
+  });
+  if (!res.ok) {
+    let error = 'Could not classify archetype';
+    try { error = (await res.json()).error ?? error; } catch { /* ignore */ }
+    return { ok: false, error };
+  }
+  const data = await res.json();
+  return { ok: true, archetype: data.archetype };
+}
+
+export async function sendWelcomeEmail(
+  firstName: string,
+  email: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await authedFetch('/api/email/welcome', {
+    method: 'POST',
+    body: JSON.stringify({ firstName, email }),
+  });
+  if (!res.ok) {
+    let error = 'Could not send email';
+    try { error = (await res.json()).error ?? error; } catch { /* ignore */ }
+    return { ok: false, error };
+  }
+  return { ok: true };
 }

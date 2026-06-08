@@ -10,7 +10,6 @@
     "test": "jest --watchAll=false",
     "typecheck": "tsc --noEmit",
     "server": "npx tsx server/index.ts",
-    "build:web": "npx expo export --platform web --output-dir dist",
     "start:prod": "NODE_ENV=production npx tsx server/index.ts"
   },
   "dependencies": {
