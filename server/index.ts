@@ -23,6 +23,19 @@ app.use('/api/match', matchRouter);
 app.use('/api/archetype', archetypeRouter);
 app.use('/api/email', emailRouter);
 
+app.get('/', (_req, res) => {
+  res.send(`<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Romeo &amp; Juliet API</title>
+<style>body{font-family:Georgia,serif;background:#fbf2e3;color:#2c2c2c;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+div{text-align:center}h1{font-size:2em;margin-bottom:.5em}p{color:#8b7355}</style></head>
+<body><div>
+  <h1>Romeo &amp; Juliet</h1>
+  <p>API server is running.</p>
+  <p style="font-size:.85em;margin-top:2em"><a href="/health" style="color:#8b7355">/health</a></p>
+</div></body></html>`);
+});
+
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
