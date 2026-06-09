@@ -29,11 +29,10 @@ app.use('/api/email', emailRouter);
 
 // ── UI ──────────────────────────────────────────────────────────────────────
 if (IS_PROD) {
-  // Production: serve the exported static web bundle
-  const distPath = path.join(process.cwd(), 'dist');
-  app.use(express.static(distPath));
-  app.get('*', (_req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
+  // Production: pure API server — the mobile app (EAS build / Expo Go)
+  // connects directly to these routes. No static file serving needed.
+  app.use((_req, res) => {
+    res.status(404).json({ error: 'Not found' });
   });
 } else {
   // Development: proxy all non-API traffic to Metro's web bundler so the

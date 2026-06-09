@@ -62,3 +62,7 @@ EMAIL_FROM = "product@romeojuliet.love"
 EMAIL_FROM_NAME = "Romeo & Juliet"
 APP_URL = "https://romeojuliet.love"
 EXPO_PUBLIC_API_URL = "https://f2bf1624-84d1-4f32-8c8f-c5d4ecc5395b-00-2vjuetglalcgo.sisko.replit.dev"
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["npm", "run", "start:prod"]
