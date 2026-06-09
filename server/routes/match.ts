@@ -20,7 +20,7 @@ router.post('/respond', requireAuth, async (req: any, res) => {
 
     const { data: match, error: matchErr } = await supabase
       .from('matches')
-      .select('id, user_a, user_b')
+      .select('id, user_a, user_b, a_response, b_response')
       .eq('id', matchId)
       .maybeSingle();
 
@@ -30,16 +30,33 @@ router.post('/respond', requireAuth, async (req: any, res) => {
     }
 
     const isUserA = (match as any).user_a === req.user.id;
-    const col = isUserA ? 'a_response' : 'b_response';
+    const col     = isUserA ? 'a_response' : 'b_response';
+    const otherCol = isUserA ? 'b_response' : 'a_response';
+
+    // Store response as a proper JSONB object (not JSON.stringify)
+    const responseObj = {
+      choice: response,
+      note: note ?? null,
+      ts: new Date().toISOString(),
+    };
+
+    // Determine new match status
+    const otherResponse = (match as any)[otherCol];
+    const otherChoice = otherResponse?.choice ?? null;
+    let newStatus: string;
+    if (response === 'no') {
+      newStatus = 'EXPIRED';
+    } else if (otherChoice === 'yes') {
+      newStatus = 'MUTUAL';  // Both said yes
+    } else {
+      newStatus = 'PROPOSED';  // Still waiting on other person
+    }
 
     const { error: updateErr } = await supabase
       .from('matches')
       .update({
-        [col]: JSON.stringify({
-          choice: response,
-          note: note ?? null,
-          ts: new Date().toISOString(),
-        }),
+        [col]: responseObj,
+        status: newStatus,
       })
       .eq('id', matchId);
 
@@ -49,7 +66,14 @@ router.post('/respond', requireAuth, async (req: any, res) => {
       return;
     }
 
-    res.json({ ok: true });
+    // If mutual match, advance both users' phases to CHATTING
+    if (newStatus === 'MUTUAL') {
+      await supabase.from('profiles')
+        .update({ phase: 'APPROVED' })
+        .in('user_id', [(match as any).user_a, (match as any).user_b]);
+    }
+
+    res.json({ ok: true, status: newStatus });
   } catch (err: any) {
     console.error('[match/respond] error:', err.message);
     res.status(500).json({ error: err.message ?? 'Server error' });

@@ -24,7 +24,7 @@ ${ARCHETYPE_IDS.map(id => `- ${id}: ${ARCHETYPE_DESCRIPTIONS[id]}`).join('\n')}
 
 Rules:
 - Read between the lines. Short or guarded answers often signal "slow" or "grounded". Vivid, expressive answers often signal "romantic" or "curious".
-- Weight the open-text answers (misunderstood, moved, romeo_note) most heavily — they reveal true voice.
+- Weight the open-text answers most heavily — they reveal true voice.
 - Return ONLY a JSON object: { "archetype": "<id>", "reason": "<one sentence, warm and human>" }
 - The reason should feel like something a perceptive friend would say, not a clinical assessment.
 - Never mention the archetype name in the reason — describe the quality you saw.`;
@@ -82,19 +82,43 @@ router.post('/classify', requireAuth, async (req: any, res) => {
     }
 
     const supabase = getAdminClient();
+
+    // Save archetype + advance phase to WAITING (questionnaire done, awaiting letter)
+    const profileUpdate: Record<string, unknown> = {
+      user_id: req.user.id,
+      questionnaire_answers: answers,
+      phase: 'WAITING',
+    };
+
+    // Only add archetype fields if the columns exist (graceful pre-migration handling)
+    profileUpdate.archetype = archetype;
+    profileUpdate.archetype_reason = parsed.reason;
+
     const { error: dbErr } = await supabase
       .from('profiles')
-      .upsert(
-        {
-          user_id: req.user.id,
-          archetype,
-          archetype_reason: parsed.reason,
-          phase: 'PENDING_APPROVAL',
-        },
-        { onConflict: 'user_id' }
-      );
+      .upsert(profileUpdate, { onConflict: 'user_id' });
 
     if (dbErr) {
+      // Column might not exist yet — retry without archetype fields
+      if (dbErr.message.includes("column") && dbErr.message.includes("archetype")) {
+        const { error: retryErr } = await supabase
+          .from('profiles')
+          .upsert({
+            user_id: req.user.id,
+            questionnaire_answers: answers,
+            phase: 'WAITING',
+          }, { onConflict: 'user_id' });
+
+        if (retryErr) {
+          console.error('[archetype/classify] retry DB error:', retryErr.message);
+          res.status(500).json({ error: retryErr.message });
+          return;
+        }
+        // Still return the archetype to the client even if not saved
+        res.json({ ok: true, archetype, reason: parsed.reason, warning: 'archetype column not yet migrated' });
+        return;
+      }
+
       console.error('[archetype/classify] DB error:', dbErr.message);
       res.status(500).json({ error: dbErr.message });
       return;
