@@ -13,8 +13,12 @@ const PORT = parseInt(process.env.PORT || '5000');
 const IS_PROD = process.env.NODE_ENV === 'production';
 const METRO_PORT = parseInt(process.env.METRO_PORT || '8080');
 
-app.use(cors());
-app.use(express.json());
+// Allow requests from any origin (Expo Go, EAS builds, and the deployed app domain)
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
+app.use(express.json({ limit: '10mb' }));
 
 // ── API routes ──────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
