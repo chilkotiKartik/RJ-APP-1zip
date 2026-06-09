@@ -77,7 +77,7 @@ export async function respondToMatch(
         const col = (match as { user_a: string; user_b: string }).user_a === user.id ? 'a_response' : 'b_response';
         await supabase
           .from('matches')
-          .update({ [col]: JSON.stringify({ choice: response, note, ts: new Date().toISOString() }) })
+          .update({ [col]: { choice: response, note, ts: new Date().toISOString() } })
           .eq('id', matchId);
       }
       return { ok: true };

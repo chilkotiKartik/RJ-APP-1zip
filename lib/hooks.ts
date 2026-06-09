@@ -122,7 +122,7 @@ export function useStatus(pollMs = 5000): StatusResult {
   };
 }
 
-export type MatchProfile = { first_name: string | null; archetype: string | null } | null;
+export type MatchProfile = { first_name: string | null; archetype?: string | null } | null;
 export type MatchRow = {
   id: string;
   user_a: string | null;
@@ -157,7 +157,7 @@ export function useMatches(userId: string | null): MatchesResult {
       const { data, error: err } = await supabase
         .from('matches')
         .select(
-          '*, profile_a:profiles!user_a(first_name, archetype), profile_b:profiles!user_b(first_name, archetype)'
+          '*, profile_a:profiles!user_a(first_name), profile_b:profiles!user_b(first_name)'
         )
         .or(`user_a.eq.${userId},user_b.eq.${userId}`)
         .order('created_at', { ascending: false });
